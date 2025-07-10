@@ -157,7 +157,7 @@ export class DatabaseStorage implements IStorage {
             or(
               ilike(knowledgeBaseEntries.question, `%${term}%`),
               ilike(knowledgeBaseEntries.answer, `%${term}%`),
-              ilike(knowledgeBaseEntries.keywords, `%${term}%`)
+              ilike(knowledgeBaseEntries.category, `%${term}%`)
             )
           )
         )

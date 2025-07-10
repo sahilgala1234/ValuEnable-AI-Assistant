@@ -1,6 +1,112 @@
 import type { InsertKnowledgeBase } from "@shared/schema";
 
 export const defaultKnowledgeBase: InsertKnowledgeBase[] = [
+  // ValuEnable Specific Policy Information
+  {
+    category: "Policy Details",
+    question: "What are the current policy details?",
+    answer: "Premium Amount: ₹100,000 yearly, Sum Assured: ₹10,00,000, Policy Term: 10 years, Premium Payment Term: 7 years, Due Date: 25th September 2024, Fund Value: ₹5,53,089, Premium paid till date: ₹4,00,000",
+    keywords: ["policy details", "premium amount", "sum assured", "policy term", "fund value"],
+    priority: 5,
+    isActive: true
+  },
+  {
+    category: "Returns & Performance",
+    question: "What are the effective returns and charges?",
+    answer: "Effective Returns: 11.47%, Charges: 3.89%, Loyalty Benefits: ₹22,000 approximately. Fund allocations: Pure Stock Fund 35% (16.91% returns), Bluechip Equity Fund 35% (17.23% returns), Pure Stock Fund 2 30% (16.66% returns)",
+    keywords: ["returns", "charges", "performance", "fund allocation", "loyalty benefits"],
+    priority: 5,
+    isActive: true
+  },
+  {
+    category: "Payment Options",
+    question: "What payment options are available?",
+    answer: "You can pay via online transfer, credit card, debit card, net banking, PhonePe, WhatsApp Pay, Google Pay, cheque, or cash. For online payments, visit our website or we can send you a payment link.",
+    keywords: ["payment", "online", "credit card", "net banking", "payment link"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "Premium Revival",
+    question: "What happens if I don't pay my premium?",
+    answer: "Your policy is currently in 'Discontinuance' status with no life insurance cover. You're losing the benefit of ₹10,00,000 sum assured. Renewal premiums have maximum allocation and provide tax benefits under Section 80C and 10(10D).",
+    keywords: ["discontinuance", "premium due", "life cover", "tax benefits"],
+    priority: 5,
+    isActive: true
+  },
+  {
+    category: "Financial Difficulties",
+    question: "What if I can't pay due to financial problems?",
+    answer: "You can pay via credit card, switch to monthly EMI, or change payment frequency. After 5 years, partial withdrawal is available. Staying invested is key to achieving financial goals.",
+    keywords: ["financial problems", "credit card", "EMI", "partial withdrawal"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "Market Concerns",
+    question: "Markets are too high, should I wait?",
+    answer: "Your life insurance worth ₹10,00,000 has been reduced to NIL while waiting. You can invest in our Bond Fund (5.45% returns) or use Auto-transfer Portfolio strategy to systematically move from debt to equity funds when markets improve.",
+    keywords: ["market high", "bond fund", "auto-transfer", "debt funds"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "Policy Misconceptions",
+    question: "I thought this was a single premium plan?",
+    answer: "Your policy has PPT (Premium Payment Term) of 7 years as mentioned in policy document. By discontinuing, your money will be invested in low yield Discontinued Life Fund (4.30% returns) vs market linked funds (16.91% returns in Pure Stock Fund).",
+    keywords: ["single premium", "PPT", "discontinued fund", "market linked"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "Alternative Investments",
+    question: "What about mutual funds or other alternatives?",
+    answer: "Most mutual funds have 2% expense ratios without life insurance cover. Your policy's effective charges reduce to 1.61% for remaining term. You get loyalty additions of ₹22,000 which aren't available in mutual funds.",
+    keywords: ["mutual funds", "expense ratio", "effective charges", "loyalty additions"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "Unsatisfactory Returns",
+    question: "What if I'm not satisfied with returns?",
+    answer: "You've earned 11.47% annualized effective returns post all charges and taxes. Effective charges reduce to 1.61% for remaining term vs 3.89% till date. You can switch to any other funds based on risk appetite.",
+    keywords: ["unsatisfactory returns", "fund switching", "effective charges", "risk appetite"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "New Policy Purchase",
+    question: "Should I buy a new ULIP policy?",
+    answer: "ULIPs have higher charges initially. Your current policy has only 1.61% effective charges for remaining term, much cheaper than new ULIP. For traditional plans, consider diversifying by switching part of funds to debt funds.",
+    keywords: ["new policy", "ULIP charges", "traditional plans", "diversification"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "Contact Information",
+    question: "How can I contact ValuEnable for assistance?",
+    answer: "Call our helpline at 1800 209 7272, message us on WhatsApp at 8806 727272, email us, or visit our website. For policy bond download, send message from registered mobile to 8806727272.",
+    keywords: ["contact", "helpline", "whatsapp", "policy bond", "website"],
+    priority: 3,
+    isActive: true
+  },
+  {
+    category: "Growth Scenarios",
+    question: "What are the growth projections?",
+    answer: "Growth @ 8%: ₹11,84,000 (7.73% effective returns). Growth @ 4%: ₹9,72,576 (4.78% effective returns). Historical Growth @ 17.33%: ₹19,99,690 (15.60% effective returns). Pay 1 premium and stay scenarios also available.",
+    keywords: ["growth projections", "maturity amount", "historical returns", "effective returns"],
+    priority: 3,
+    isActive: true
+  },
+  // Original insurance knowledge base entries
+  {
+    category: "Life Insurance",
+    question: "What is life insurance?",
+    answer: "Life insurance is a contract between you and an insurance company where you pay premiums in exchange for a death benefit paid to your beneficiaries when you pass away.",
+    keywords: ["life insurance", "death benefit", "premiums", "beneficiaries"],
+    priority: 1,
+    isActive: true
+  },
   {
     category: "Life Insurance",
     question: "What is life insurance?",
