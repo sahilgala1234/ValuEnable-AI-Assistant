@@ -165,7 +165,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const conversationHistory = messages.map(msg => `${msg.type}: ${msg.content}`);
       
       // Generate AI response
+      console.log('Generating AI response for:', transcription.text);
       const aiResponse = await openAIService.generateResponse(transcription.text, conversationHistory);
+      console.log('AI response generated:', { message: aiResponse.message, confidence: aiResponse.confidence });
       
       // Save AI response
       const aiMessage = await storage.createMessage({
@@ -177,6 +179,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           confidence: aiResponse.confidence,
           sources: aiResponse.sources
         }
+      });
+      
+      console.log('Voice processing completed successfully:', {
+        userMessageId: userMessage.id,
+        aiMessageId: aiMessage.id,
+        transcribedText: transcription.text,
+        aiResponseLength: aiResponse.message.length
       });
       
       res.json({

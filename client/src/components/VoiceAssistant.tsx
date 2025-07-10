@@ -36,7 +36,8 @@ export default function VoiceAssistant() {
   const { data: conversation, isLoading } = useQuery({
     queryKey: ["conversations", sessionId],
     enabled: !!sessionId,
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchInterval: 2000, // Refetch every 2 seconds for real-time updates
+    staleTime: 0, // Consider data stale immediately
   });
 
   // Get analytics
@@ -85,10 +86,15 @@ export default function VoiceAssistant() {
       
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Voice message processed successfully:', data);
       queryClient.invalidateQueries({ queryKey: ["conversations", sessionId] });
       queryClient.invalidateQueries({ queryKey: ["analytics", sessionId] });
       setIsVoiceModalOpen(false);
+      toast({
+        title: "Voice Message Processed",
+        description: "Your voice message has been processed successfully",
+      });
     },
     onError: (error) => {
       console.error("Voice message error:", error);
