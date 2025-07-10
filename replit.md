@@ -28,11 +28,12 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Centralized error middleware with structured responses
 
 ### Data Storage Solutions
-- **Database**: PostgreSQL for persistent data storage
+- **Database**: PostgreSQL for persistent data storage (Active)
 - **ORM**: Drizzle ORM for type-safe database operations
 - **Schema**: Defined in shared TypeScript files for consistency
 - **Session Management**: PostgreSQL-based session storage with connect-pg-simple
-- **In-Memory Fallback**: Memory-based storage implementation for development
+- **Storage Implementation**: DatabaseStorage class for all CRUD operations
+- **In-Memory Fallback**: Memory-based storage implementation available for development
 
 ## Key Components
 

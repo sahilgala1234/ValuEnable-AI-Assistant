@@ -13,6 +13,9 @@ import {
   type InsertKnowledgeBase,
   type ConversationWithMessages
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, ilike, or, and } from "drizzle-orm";
+import { defaultKnowledgeBase } from "./data/knowledgeBase";
 
 export interface IStorage {
   // User methods
@@ -37,6 +40,149 @@ export interface IStorage {
   getKnowledgeBaseByCategory(category: string): Promise<KnowledgeBase[]>;
   searchKnowledgeBase(query: string): Promise<KnowledgeBase[]>;
   createKnowledgeBaseEntry(entry: InsertKnowledgeBase): Promise<KnowledgeBase>;
+}
+
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async getConversation(id: number): Promise<Conversation | undefined> {
+    const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
+    return conversation || undefined;
+  }
+
+  async getConversationBySessionId(sessionId: string): Promise<Conversation | undefined> {
+    const [conversation] = await db.select().from(conversations).where(eq(conversations.sessionId, sessionId));
+    return conversation || undefined;
+  }
+
+  async getConversationWithMessages(sessionId: string): Promise<ConversationWithMessages | undefined> {
+    const conversation = await this.getConversationBySessionId(sessionId);
+    if (!conversation) return undefined;
+
+    const conversationMessages = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversation.id))
+      .orderBy(messages.timestamp);
+
+    return {
+      ...conversation,
+      messages: conversationMessages,
+    };
+  }
+
+  async createConversation(insertConversation: InsertConversation): Promise<Conversation> {
+    const [conversation] = await db
+      .insert(conversations)
+      .values(insertConversation)
+      .returning();
+    return conversation;
+  }
+
+  async updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation | undefined> {
+    const [updatedConversation] = await db
+      .update(conversations)
+      .set(updates)
+      .where(eq(conversations.id, id))
+      .returning();
+    return updatedConversation || undefined;
+  }
+
+  async getMessage(id: number): Promise<Message | undefined> {
+    const [message] = await db.select().from(messages).where(eq(messages.id, id));
+    return message || undefined;
+  }
+
+  async getMessagesByConversation(conversationId: number): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(messages.timestamp);
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const [message] = await db
+      .insert(messages)
+      .values(insertMessage)
+      .returning();
+    return message;
+  }
+
+  async getKnowledgeBaseEntries(): Promise<KnowledgeBase[]> {
+    return await db
+      .select()
+      .from(knowledgeBaseEntries)
+      .where(eq(knowledgeBaseEntries.isActive, true))
+      .orderBy(desc(knowledgeBaseEntries.priority));
+  }
+
+  async getKnowledgeBaseByCategory(category: string): Promise<KnowledgeBase[]> {
+    return await db
+      .select()
+      .from(knowledgeBaseEntries)
+      .where(and(
+        eq(knowledgeBaseEntries.category, category),
+        eq(knowledgeBaseEntries.isActive, true)
+      ))
+      .orderBy(desc(knowledgeBaseEntries.priority));
+  }
+
+  async searchKnowledgeBase(query: string): Promise<KnowledgeBase[]> {
+    const searchTerms = query.toLowerCase().split(' ');
+    
+    return await db
+      .select()
+      .from(knowledgeBaseEntries)
+      .where(and(
+        eq(knowledgeBaseEntries.isActive, true),
+        or(
+          ...searchTerms.map(term => 
+            or(
+              ilike(knowledgeBaseEntries.question, `%${term}%`),
+              ilike(knowledgeBaseEntries.answer, `%${term}%`),
+              ilike(knowledgeBaseEntries.keywords, `%${term}%`)
+            )
+          )
+        )
+      ))
+      .orderBy(desc(knowledgeBaseEntries.priority));
+  }
+
+  async createKnowledgeBaseEntry(entry: InsertKnowledgeBase): Promise<KnowledgeBase> {
+    const [knowledgeEntry] = await db
+      .insert(knowledgeBaseEntries)
+      .values(entry)
+      .returning();
+    return knowledgeEntry;
+  }
+
+  async initializeKnowledgeBase(): Promise<void> {
+    // Check if knowledge base is already populated
+    const existingEntries = await db.select().from(knowledgeBaseEntries).limit(1);
+    if (existingEntries.length > 0) {
+      return; // Already initialized
+    }
+
+    // Insert default knowledge base entries
+    await db.insert(knowledgeBaseEntries).values(defaultKnowledgeBase);
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -244,4 +390,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
+
+// Initialize the knowledge base on startup
+storage.initializeKnowledgeBase().catch(console.error);
