@@ -224,6 +224,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // MP4 training data upload endpoint
+  app.post("/api/training/upload", async (req, res) => {
+    try {
+      let audioBuffer: Buffer;
+      let filename: string = "";
+      let fileType: string = "";
+
+      // Handle binary data for MP4 files
+      if (Buffer.isBuffer(req.body)) {
+        audioBuffer = req.body;
+        filename = req.headers["x-filename"] as string || `training_${Date.now()}.mp4`;
+        fileType = req.headers["content-type"] || "video/mp4";
+      } else {
+        return res.status(400).json({ error: "Invalid file format. Please upload MP4 files." });
+      }
+
+      if (!audioBuffer || audioBuffer.length === 0) {
+        return res.status(400).json({ error: "No audio data received" });
+      }
+
+      // Convert audio buffer to base64 for storage
+      const audioDataBase64 = audioBuffer.toString("base64");
+      
+      // Create training data entry
+      const trainingEntry = await storage.createTrainingDataEntry({
+        filename,
+        fileType,
+        fileSize: audioBuffer.length,
+        audioData: audioDataBase64,
+        processingStatus: "pending",
+        transcription: null,
+        metadata: null
+      });
+
+      // Start async processing (transcription)
+      processTrainingDataAsync(trainingEntry.id, audioBuffer);
+
+      res.json({
+        success: true,
+        message: "Training data uploaded successfully",
+        trainingEntry: {
+          id: trainingEntry.id,
+          filename: trainingEntry.filename,
+          fileType: trainingEntry.fileType,
+          fileSize: trainingEntry.fileSize,
+          processingStatus: trainingEntry.processingStatus,
+          createdAt: trainingEntry.createdAt
+        }
+      });
+
+    } catch (error) {
+      console.error("Error in training upload endpoint:", error);
+      res.status(500).json({ error: "Failed to upload training data" });
+    }
+  });
+
+  async function processTrainingDataAsync(trainingId: number, audioBuffer: Buffer) {
+    try {
+      console.log(`Processing training data ${trainingId}...`);
+      
+      // Update status to processing
+      await storage.updateTrainingDataEntry(trainingId, {
+        processingStatus: "processing"
+      });
+
+      // Transcribe using OpenAI Whisper
+      const transcription = await openAIService.transcribeAudio(audioBuffer);
+      
+      // Update with transcription results
+      await storage.updateTrainingDataEntry(trainingId, {
+        transcription: transcription.text,
+        processingStatus: "completed",
+        metadata: {
+          confidence: transcription.confidence,
+          processingTime: Date.now()
+        }
+      });
+
+      console.log(`Training data ${trainingId} processed successfully`);
+
+    } catch (error) {
+      console.error(`Error processing training data ${trainingId}:`, error);
+      await storage.updateTrainingDataEntry(trainingId, {
+        processingStatus: "failed",
+        metadata: {
+          error: error instanceof Error ? error.message : String(error),
+          processingTime: Date.now()
+        }
+      });
+    }
+  }
+
+  // Get training data entries
+  app.get("/api/training", async (req, res) => {
+    try {
+      const entries = await storage.getTrainingDataEntries();
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching training data:", error);
+      res.status(500).json({ error: "Failed to fetch training data" });
+    }
+  });
+
+  // Get specific training data entry
+  app.get("/api/training/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const entry = await storage.getTrainingDataById(id);
+      
+      if (!entry) {
+        return res.status(404).json({ error: "Training data not found" });
+      }
+      
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching training data:", error);
+      res.status(500).json({ error: "Failed to fetch training data" });
+    }
+  });
+
   // Get conversation analytics
   app.get("/api/conversations/:sessionId/analytics", async (req, res) => {
     try {

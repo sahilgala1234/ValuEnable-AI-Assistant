@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import ConversationArea from "./ConversationArea";
@@ -11,6 +11,7 @@ export default function VoiceAssistant() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [voiceButtonDisabled, setVoiceButtonDisabled] = useState(false);
+  const voiceClickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -136,6 +137,13 @@ export default function VoiceAssistant() {
   // Initialize on mount
   useEffect(() => {
     createConversation();
+    
+    // Cleanup on unmount
+    return () => {
+      if (voiceClickTimeoutRef.current) {
+        clearTimeout(voiceClickTimeoutRef.current);
+      }
+    };
   }, []);
 
   const handleQuickAction = (question: string) => {
@@ -143,6 +151,11 @@ export default function VoiceAssistant() {
   };
 
   const handleVoiceInput = () => {
+    // Clear any existing timeout
+    if (voiceClickTimeoutRef.current) {
+      clearTimeout(voiceClickTimeoutRef.current);
+    }
+    
     // Prevent opening multiple modals
     if (isVoiceModalOpen || isSendingVoice || voiceButtonDisabled) {
       return;
@@ -152,10 +165,10 @@ export default function VoiceAssistant() {
     setVoiceButtonDisabled(true);
     setIsVoiceModalOpen(true);
     
-    // Re-enable the button after a short delay
-    setTimeout(() => {
+    // Re-enable the button after a delay
+    voiceClickTimeoutRef.current = setTimeout(() => {
       setVoiceButtonDisabled(false);
-    }, 500);
+    }, 1000);
   };
 
   const handleVoiceComplete = (audioBlob: Blob) => {
@@ -165,6 +178,11 @@ export default function VoiceAssistant() {
   const handleVoiceCancel = () => {
     setIsVoiceModalOpen(false);
     setVoiceButtonDisabled(false);
+    
+    // Clear any pending timeout
+    if (voiceClickTimeoutRef.current) {
+      clearTimeout(voiceClickTimeoutRef.current);
+    }
   };
 
   if (isLoading) {

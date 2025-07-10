@@ -41,6 +41,19 @@ export const knowledgeBaseEntries = pgTable("knowledge_base_entries", {
   isActive: boolean("is_active").default(true),
 });
 
+export const trainingData = pgTable("training_data", {
+  id: serial("id").primaryKey(),
+  filename: text("filename").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  transcription: text("transcription"),
+  audioData: text("audio_data").notNull(), // Base64 encoded audio
+  processingStatus: text("processing_status").notNull().default("pending"), // pending, processing, completed, failed
+  metadata: jsonb("metadata"), // JSON for additional data
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Define relations
 export const conversationsRelations = relations(conversations, ({ many }) => ({
   messages: many(messages),
@@ -81,6 +94,16 @@ export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBaseEntries
   isActive: true,
 });
 
+export const insertTrainingDataSchema = createInsertSchema(trainingData).pick({
+  filename: true,
+  fileType: true,
+  fileSize: true,
+  transcription: true,
+  audioData: true,
+  processingStatus: true,
+  metadata: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
@@ -89,6 +112,8 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertKnowledgeBase = z.infer<typeof insertKnowledgeBaseSchema>;
 export type KnowledgeBase = typeof knowledgeBaseEntries.$inferSelect;
+export type InsertTrainingData = z.infer<typeof insertTrainingDataSchema>;
+export type TrainingData = typeof trainingData.$inferSelect;
 
 // API response types
 export type ConversationWithMessages = Conversation & {

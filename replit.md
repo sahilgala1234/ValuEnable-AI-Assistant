@@ -4,7 +4,7 @@
 
 This is a full-stack web application for an AI-powered insurance voice assistant. The application allows users to interact with an AI agent through both text and voice input to get help with insurance-related queries, policy information, claims processing, and general insurance guidance.
 
-**Current Status**: Fully operational voice assistant with multilingual support (Hindi/English), enhanced with ElevenLabs integration and following structured ValuEnable calling scripts.
+**Current Status**: Fully operational voice assistant with multilingual support (Hindi/English/Marathi/Gujarati, no Urdu), enhanced with ElevenLabs integration, following structured ValuEnable calling scripts, and now includes MP4 training data upload capability.
 
 ## User Preferences
 
@@ -44,6 +44,7 @@ Preferred communication style: Simple, everyday language.
 - **Conversations**: Session-based conversation tracking with metadata
 - **Messages**: Individual messages with type classification (user/ai/system)
 - **Knowledge Base**: Structured insurance information for AI responses
+- **Training Data**: Storage for MP4 call recordings with transcription processing
 
 ### AI Integration
 - **OpenAI Service**: GPT-4o integration for natural language processing
@@ -75,6 +76,20 @@ Preferred communication style: Simple, everyday language.
 5. **Response Delivery**: AI response is stored and delivered to user
 6. **Voice Synthesis**: Text responses converted to speech when requested
 7. **Analytics**: Conversation metrics and performance data collected
+
+## API Endpoints
+
+### Training Data Management
+- **POST /api/training/upload**: Upload MP4 call recordings for training
+- **GET /api/training**: List all training data entries
+- **GET /api/training/:id**: Get specific training data entry details
+
+### Voice & Conversation Management
+- **POST /api/conversations**: Start new conversation session
+- **GET /api/conversations/:sessionId**: Get conversation with messages
+- **POST /api/conversations/:sessionId/messages**: Send text message
+- **POST /api/conversations/:sessionId/voice**: Process voice input
+- **GET /api/conversations/:sessionId/analytics**: Get conversation analytics
 
 ## External Dependencies
 

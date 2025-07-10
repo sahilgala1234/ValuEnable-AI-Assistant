@@ -3,6 +3,7 @@ import {
   conversations, 
   messages, 
   knowledgeBaseEntries,
+  trainingData,
   type User, 
   type InsertUser,
   type Conversation,
@@ -11,6 +12,8 @@ import {
   type InsertMessage,
   type KnowledgeBase,
   type InsertKnowledgeBase,
+  type TrainingData,
+  type InsertTrainingData,
   type ConversationWithMessages
 } from "@shared/schema";
 import { db } from "./db";
@@ -40,6 +43,12 @@ export interface IStorage {
   getKnowledgeBaseByCategory(category: string): Promise<KnowledgeBase[]>;
   searchKnowledgeBase(query: string): Promise<KnowledgeBase[]>;
   createKnowledgeBaseEntry(entry: InsertKnowledgeBase): Promise<KnowledgeBase>;
+  
+  // Training data methods
+  getTrainingDataEntries(): Promise<TrainingData[]>;
+  getTrainingDataById(id: number): Promise<TrainingData | undefined>;
+  createTrainingDataEntry(entry: InsertTrainingData): Promise<TrainingData>;
+  updateTrainingDataEntry(id: number, updates: Partial<TrainingData>): Promise<TrainingData | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -183,6 +192,35 @@ export class DatabaseStorage implements IStorage {
     // Insert default knowledge base entries
     await db.insert(knowledgeBaseEntries).values(defaultKnowledgeBase);
   }
+
+  async getTrainingDataEntries(): Promise<TrainingData[]> {
+    return await db
+      .select()
+      .from(trainingData)
+      .orderBy(desc(trainingData.createdAt));
+  }
+
+  async getTrainingDataById(id: number): Promise<TrainingData | undefined> {
+    const [entry] = await db.select().from(trainingData).where(eq(trainingData.id, id));
+    return entry || undefined;
+  }
+
+  async createTrainingDataEntry(entry: InsertTrainingData): Promise<TrainingData> {
+    const [trainingEntry] = await db
+      .insert(trainingData)
+      .values(entry)
+      .returning();
+    return trainingEntry;
+  }
+
+  async updateTrainingDataEntry(id: number, updates: Partial<TrainingData>): Promise<TrainingData | undefined> {
+    const [updated] = await db
+      .update(trainingData)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(trainingData.id, id))
+      .returning();
+    return updated || undefined;
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -190,20 +228,24 @@ export class MemStorage implements IStorage {
   private conversations: Map<number, Conversation>;
   private messages: Map<number, Message>;
   private knowledgeBase: Map<number, KnowledgeBase>;
+  private trainingData: Map<number, TrainingData>;
   private currentUserId: number;
   private currentConversationId: number;
   private currentMessageId: number;
   private currentKnowledgeBaseId: number;
+  private currentTrainingDataId: number;
 
   constructor() {
     this.users = new Map();
     this.conversations = new Map();
     this.messages = new Map();
     this.knowledgeBase = new Map();
+    this.trainingData = new Map();
     this.currentUserId = 1;
     this.currentConversationId = 1;
     this.currentMessageId = 1;
     this.currentKnowledgeBaseId = 1;
+    this.currentTrainingDataId = 1;
     
     // Initialize with sample knowledge base entries
     this.initializeKnowledgeBase();
@@ -387,6 +429,45 @@ export class MemStorage implements IStorage {
     };
     this.knowledgeBase.set(id, knowledgeEntry);
     return knowledgeEntry;
+  }
+
+  async getTrainingDataEntries(): Promise<TrainingData[]> {
+    return Array.from(this.trainingData.values()).sort((a, b) => 
+      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+  }
+
+  async getTrainingDataById(id: number): Promise<TrainingData | undefined> {
+    return this.trainingData.get(id);
+  }
+
+  async createTrainingDataEntry(entry: InsertTrainingData): Promise<TrainingData> {
+    const id = this.currentTrainingDataId++;
+    const now = new Date();
+    const trainingEntry: TrainingData = { 
+      ...entry, 
+      id,
+      processingStatus: entry.processingStatus || "pending",
+      transcription: entry.transcription || null,
+      metadata: entry.metadata || null,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.trainingData.set(id, trainingEntry);
+    return trainingEntry;
+  }
+
+  async updateTrainingDataEntry(id: number, updates: Partial<TrainingData>): Promise<TrainingData | undefined> {
+    const existing = this.trainingData.get(id);
+    if (!existing) return undefined;
+    
+    const updated: TrainingData = { 
+      ...existing, 
+      ...updates, 
+      updatedAt: new Date() 
+    };
+    this.trainingData.set(id, updated);
+    return updated;
   }
 }
 
