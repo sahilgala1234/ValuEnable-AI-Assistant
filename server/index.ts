@@ -6,6 +6,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Handle raw binary data for voice endpoints
+app.use('/api/conversations/:sessionId/voice', express.raw({
+  type: 'application/octet-stream',
+  limit: '10mb'
+}));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

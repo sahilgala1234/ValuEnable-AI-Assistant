@@ -104,19 +104,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { sessionId } = req.params;
       
+      console.log('Voice request received:', {
+        sessionId,
+        bodyType: typeof req.body,
+        isBuffer: Buffer.isBuffer(req.body),
+        bodySize: req.body ? req.body.length : 0,
+        contentType: req.get('content-type')
+      });
+      
       // Handle audio buffer from request
       let audioBuffer: Buffer;
       if (Buffer.isBuffer(req.body)) {
         audioBuffer = req.body;
       } else if (req.body && typeof req.body === 'object' && req.body.data) {
         audioBuffer = Buffer.from(req.body.data);
+      } else if (req.body && req.body.constructor === ArrayBuffer) {
+        audioBuffer = Buffer.from(req.body);
       } else {
+        console.log('Invalid audio data format received');
         return res.status(400).json({ error: "Invalid audio data format" });
       }
       
       if (!audioBuffer || audioBuffer.length === 0) {
+        console.log('No audio data received');
         return res.status(400).json({ error: "Audio data is required" });
       }
+      
+      console.log('Audio buffer created:', { size: audioBuffer.length });
       
       const conversation = await storage.getConversationBySessionId(sessionId);
       if (!conversation) {
