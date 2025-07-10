@@ -4,7 +4,7 @@
 
 This is a full-stack web application for an AI-powered insurance voice assistant. The application allows users to interact with an AI agent through both text and voice input to get help with insurance-related queries, policy information, claims processing, and general insurance guidance.
 
-**Current Status**: Fully operational voice assistant with multilingual support (Hindi/English/Marathi/Gujarati, no Urdu), enhanced with ElevenLabs integration, following structured ValuEnable calling scripts, and now includes MP4 training data upload capability.
+**Current Status**: Fully operational voice assistant with multilingual support (Hindi/English/Marathi/Gujarati, no Urdu), enhanced with ElevenLabs integration, following detailed ValuEnable conversation flow scripts, and includes comprehensive MP4 training data upload with improved transcription algorithms.
 
 ## User Preferences
 
@@ -22,6 +22,11 @@ Preferred communication style: Simple, everyday language.
 - ✅ Training data management endpoints fully functional
 - ✅ Database storage with base64 encoded audio data
 - ✅ Async background processing for transcription
+- ✅ Implemented detailed ValuEnable conversation flow script
+- ✅ Enhanced OpenAI system prompt with structured conversation branches
+- ✅ Added reprocess functionality for improved transcription quality
+- ✅ Updated knowledge base with conversation flow guidelines
+- ✅ Veena now follows professional insurance agent conversation structure
 
 ## System Architecture
 

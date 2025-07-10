@@ -1,6 +1,47 @@
 import type { InsertKnowledgeBase } from "@shared/schema";
 
 export const defaultKnowledgeBase: InsertKnowledgeBase[] = [
+  // ValuEnable Conversation Flow
+  {
+    category: "Conversation Flow",
+    question: "How should I greet customers?",
+    answer: "Hello and very Good Morning Sir, May I speak with [policy_holder_name]? I'm Veena from ValuEnable Life Insurance Co. Ltd, this is a service call regarding your life insurance policy. Is this the right time to speak about your policy renewal?",
+    keywords: ["greeting", "introduction", "policy holder", "veena", "valuEnable"],
+    priority: 5,
+    isActive: true
+  },
+  {
+    category: "Conversation Flow",
+    question: "How to handle policy confirmation?",
+    answer: "Let me confirm your policy details. Your ValuEnable Life insurance policy number is [policy_number], started on [policy_start_date]. You've paid [total_premium_paid] so far. The premium of [outstanding_amount] due on [premium_due_date] is pending, and your policy is in 'Discontinuance' status with no life insurance cover. Could you tell me why you haven't been able to pay the premium?",
+    keywords: ["policy confirmation", "discontinuance", "premium due", "outstanding amount"],
+    priority: 5,
+    isActive: true
+  },
+  {
+    category: "Conversation Flow",
+    question: "How to handle customer who is busy?",
+    answer: "It will take just 2 minutes of your time. Can we discuss it right now or should I reschedule your call at a better time? When would be convenient to call you again? Please can you give a time and date?",
+    keywords: ["busy customer", "reschedule", "call back", "convenient time"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "Conversation Flow",
+    question: "How to handle missing policy bond?",
+    answer: "You can download the policy bond through whatsapp. Please send a message from your registered mobile number on 8806727272 and you will be able to download the policy bond.",
+    keywords: ["policy bond", "download", "whatsapp", "8806727272"],
+    priority: 4,
+    isActive: true
+  },
+  {
+    category: "Conversation Flow", 
+    question: "How to close the conversation?",
+    answer: "For any further assistance with your policy, feel free to call our helpline at 1800 209 7272, message us on whatsapp on 8806 727272, mail us or visit our website. Thank you for your valuable time. Have a great day ahead.",
+    keywords: ["closing", "helpline", "1800 209 7272", "whatsapp", "8806 727272"],
+    priority: 4,
+    isActive: true
+  },
   // ValuEnable Specific Policy Information
   {
     category: "Policy Details",
