@@ -76,6 +76,36 @@ export default function Training() {
     },
   });
 
+  // Reprocess mutation
+  const reprocessMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/training/${id}/reprocess`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Reprocessing failed");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reprocessing started",
+        description: "The training data is being reprocessed with improved algorithms.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/training"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Reprocessing failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -212,7 +242,23 @@ export default function Training() {
                         <FileAudio className="w-4 h-4 text-gray-500" />
                         <span className="font-medium">{item.filename}</span>
                       </div>
-                      {getStatusBadge(item.processingStatus)}
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(item.processingStatus)}
+                        {item.processingStatus === "completed" && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => reprocessMutation.mutate(item.id)}
+                            disabled={reprocessMutation.isPending}
+                          >
+                            {reprocessMutation.isPending ? (
+                              <Clock className="w-3 h-3 mr-1 animate-spin" />
+                            ) : (
+                              <>🔄 Reprocess</>
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">

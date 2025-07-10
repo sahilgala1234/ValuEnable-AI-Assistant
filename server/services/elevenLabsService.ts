@@ -21,42 +21,20 @@ export class ElevenLabsService {
     const startTime = Date.now();
     
     try {
-      const OpenAI = (await import('openai')).default;
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-
-      // Create FormData for the audio file
-      const formData = new FormData();
-      const audioBlob = new Blob([audioBuffer], { type: 'audio/webm' });
-      formData.append('file', audioBlob, 'recording.webm');
-      formData.append('model', 'whisper-1');
-      formData.append('response_format', 'json');
-      formData.append('temperature', '0.2');
-
-      // Use fetch directly for better control over the request
-      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenAI API error:', response.status, errorText);
-        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      // Use the improved OpenAI service for transcription
+      const { openAIService } = await import('./openai');
+      const result = await openAIService.transcribeAudio(audioBuffer);
       const duration = (Date.now() - startTime) / 1000;
 
-      console.log('OpenAI transcription successful:', { text: result.text, duration });
+      console.log('OpenAI transcription successful:', { 
+        text: result.text.substring(0, 100) + '...', 
+        confidence: result.confidence,
+        duration 
+      });
 
       return {
-        text: result.text || '',
-        confidence: 0.85, // OpenAI doesn't provide confidence, so we use a reasonable default
+        text: result.text,
+        confidence: result.confidence,
         duration: duration
       };
     } catch (error) {

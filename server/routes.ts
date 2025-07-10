@@ -365,6 +365,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Re-process training data with improved algorithms
+  app.post("/api/training/:id(\\d+)/reprocess", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const trainingData = await storage.getTrainingDataById(id);
+      
+      if (!trainingData) {
+        return res.status(404).json({ error: "Training data not found" });
+      }
+
+      if (!trainingData.audioData) {
+        return res.status(400).json({ error: "No audio data available for reprocessing" });
+      }
+
+      // Update status to pending
+      await storage.updateTrainingDataEntry(id, {
+        processingStatus: "pending",
+        transcription: null,
+        metadata: JSON.stringify({ reprocessing: true })
+      });
+
+      // Process asynchronously
+      processTrainingDataAsync(id, Buffer.from(trainingData.audioData, 'base64'));
+
+      res.json({ success: true, message: "Training data reprocessing started" });
+    } catch (error) {
+      console.error("Error reprocessing training data:", error);
+      res.status(500).json({ error: "Failed to reprocess training data" });
+    }
+  });
+
   // Get conversation analytics
   app.get("/api/conversations/:sessionId/analytics", async (req, res) => {
     try {
