@@ -10,6 +10,7 @@ import type { ConversationWithMessages } from "@shared/schema";
 export default function VoiceAssistant() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [voiceButtonDisabled, setVoiceButtonDisabled] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -91,6 +92,7 @@ export default function VoiceAssistant() {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations", sessionId] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations", sessionId, "analytics"] });
       setIsVoiceModalOpen(false);
+      setVoiceButtonDisabled(false);
       toast({
         title: "Voice Message Processed",
         description: "Your voice message has been processed successfully",
@@ -141,7 +143,19 @@ export default function VoiceAssistant() {
   };
 
   const handleVoiceInput = () => {
+    // Prevent opening multiple modals
+    if (isVoiceModalOpen || isSendingVoice || voiceButtonDisabled) {
+      return;
+    }
+    
+    // Temporarily disable the button to prevent double-clicks
+    setVoiceButtonDisabled(true);
     setIsVoiceModalOpen(true);
+    
+    // Re-enable the button after a short delay
+    setTimeout(() => {
+      setVoiceButtonDisabled(false);
+    }, 500);
   };
 
   const handleVoiceComplete = (audioBlob: Blob) => {
@@ -150,6 +164,7 @@ export default function VoiceAssistant() {
 
   const handleVoiceCancel = () => {
     setIsVoiceModalOpen(false);
+    setVoiceButtonDisabled(false);
   };
 
   if (isLoading) {

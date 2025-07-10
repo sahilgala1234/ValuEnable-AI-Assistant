@@ -42,6 +42,14 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
     }
   }, [isOpen, recordingState]);
 
+  // Prevent multiple modals by ensuring only one can be open at a time
+  useEffect(() => {
+    if (isOpen && isProcessing) {
+      // Modal is open and processing, prevent any other actions
+      return;
+    }
+  }, [isOpen, isProcessing]);
+
   // Handle audio blob completion
   useEffect(() => {
     if (audioBlob && recordingState === 'stopped' && audioBlob !== processedAudioRef.current) {
@@ -99,7 +107,7 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onCancel}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="max-w-md">
         <DialogTitle className="sr-only">Voice Input</DialogTitle>
         <DialogDescription className="sr-only">Record voice input for insurance questions</DialogDescription>
