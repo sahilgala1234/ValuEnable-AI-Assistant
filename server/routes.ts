@@ -5,6 +5,31 @@ import { openAIService } from "./services/openai";
 import { speechService } from "./services/speechService";
 import { insertConversationSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Check file extension as well as MIME type
+    const fileExtension = file.originalname.toLowerCase().split('.').pop() || '';
+    const allowedExtensions = ['mp4', 'wav', 'mp3', 'webm', 'ogg', 'm4a'];
+    
+    if (
+      file.mimetype.startsWith('audio/') || 
+      file.mimetype.startsWith('video/') || 
+      file.mimetype === 'application/octet-stream' || 
+      allowedExtensions.includes(fileExtension)
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type ${file.mimetype} with extension ${fileExtension} not allowed. Only audio and video files are supported.`));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Start a new conversation
@@ -224,21 +249,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // MP4 training data upload endpoint
-  app.post("/api/training/upload", async (req, res) => {
+  // MP4/WAV training data upload endpoint
+  app.post("/api/training/upload", upload.single('file'), async (req, res) => {
     try {
-      let audioBuffer: Buffer;
-      let filename: string = "";
-      let fileType: string = "";
-
-      // Handle binary data for MP4 files
-      if (Buffer.isBuffer(req.body)) {
-        audioBuffer = req.body;
-        filename = req.headers["x-filename"] as string || `training_${Date.now()}.mp4`;
-        fileType = req.headers["content-type"] || "video/mp4";
-      } else {
-        return res.status(400).json({ error: "Invalid file format. Please upload MP4 files." });
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded. Please upload MP4 or WAV files." });
       }
+
+      const audioBuffer = req.file.buffer;
+      const filename = req.file.originalname;
+      const fileType = req.file.mimetype;
+      const description = req.body.description || "";
 
       if (!audioBuffer || audioBuffer.length === 0) {
         return res.status(400).json({ error: "No audio data received" });
@@ -255,7 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         audioData: audioDataBase64,
         processingStatus: "pending",
         transcription: null,
-        metadata: null
+        metadata: { description }
       });
 
       // Start async processing (transcription)
@@ -327,8 +348,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get specific training data entry
-  app.get("/api/training/:id", async (req, res) => {
+  // Get specific training data entry (numeric IDs only)
+  app.get("/api/training/:id(\\d+)", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const entry = await storage.getTrainingDataById(id);

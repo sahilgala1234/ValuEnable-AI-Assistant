@@ -10,6 +10,19 @@ This is a full-stack web application for an AI-powered insurance voice assistant
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+**Latest Update (July 10, 2025):**
+- ✅ Fixed voice input double-click issue with enhanced debouncing
+- ✅ Removed Urdu language support (Hindi/English/Marathi/Gujarati only)
+- ✅ Implemented complete MP4/WAV training data upload system
+- ✅ Added multer-based file upload with 100MB limit
+- ✅ Automatic transcription processing with OpenAI Whisper
+- ✅ Robust file type validation (supports MP4, WAV, MP3, WebM, OGG, M4A)
+- ✅ Training data management endpoints fully functional
+- ✅ Database storage with base64 encoded audio data
+- ✅ Async background processing for transcription
+
 ## System Architecture
 
 ### Frontend Architecture
