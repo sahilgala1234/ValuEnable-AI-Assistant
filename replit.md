@@ -4,6 +4,8 @@
 
 This is a full-stack web application for an AI-powered insurance voice assistant. The application allows users to interact with an AI agent through both text and voice input to get help with insurance-related queries, policy information, claims processing, and general insurance guidance.
 
+**Current Status**: Fully operational voice assistant with multilingual support (Hindi/English), enhanced with ElevenLabs integration and following structured ValuEnable calling scripts.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -78,6 +80,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Technologies
 - **OpenAI API**: For natural language processing and audio transcription
+- **ElevenLabs API**: Enhanced speech processing and text-to-speech capabilities
 - **Neon Database**: Serverless PostgreSQL hosting
 - **Radix UI**: Accessible UI component primitives
 - **TanStack React Query**: Server state management and caching
@@ -85,7 +88,8 @@ Preferred communication style: Simple, everyday language.
 ### Voice Processing
 - **Web Speech API**: Browser-native speech recognition
 - **MediaRecorder API**: Audio recording capabilities
-- **OpenAI Whisper**: Audio transcription service
+- **OpenAI Whisper**: Audio transcription service with multilingual support
+- **ElevenLabs TTS**: High-quality text-to-speech synthesis
 
 ### Development Tools
 - **Vite**: Development server and build tool
