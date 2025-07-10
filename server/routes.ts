@@ -191,6 +191,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate speech from text using ElevenLabs
+  app.post("/api/text-to-speech", async (req, res) => {
+    try {
+      const { text } = req.body;
+      
+      if (!text || text.trim().length === 0) {
+        return res.status(400).json({ error: "Text is required" });
+      }
+
+      const { elevenLabsService } = await import("./services/elevenLabsService");
+      const audioBuffer = await elevenLabsService.synthesizeSpeech(text);
+      
+      res.set({
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': audioBuffer.length.toString(),
+      });
+      
+      res.send(audioBuffer);
+    } catch (error) {
+      console.error('Text-to-speech error:', error);
+      res.status(500).json({ error: "Failed to generate speech" });
+    }
+  });
+
   // Get conversation analytics
   app.get("/api/conversations/:sessionId/analytics", async (req, res) => {
     try {

@@ -1,19 +1,13 @@
-import { openAIService } from "./openai";
+import { elevenLabsService } from "./elevenLabsService";
 import type { VoiceTranscriptionResponse } from "@shared/schema";
 
 export class SpeechService {
   async transcribeVoiceData(audioBuffer: Buffer): Promise<VoiceTranscriptionResponse> {
-    const startTime = Date.now();
-    
     try {
-      const result = await openAIService.transcribeAudio(audioBuffer);
-      const duration = Date.now() - startTime;
-      
-      return {
-        text: result.text,
-        confidence: result.confidence,
-        duration: duration / 1000 // Convert to seconds
-      };
+      console.log('Starting transcription with ElevenLabs...');
+      const result = await elevenLabsService.transcribeAudio(audioBuffer);
+      console.log('Transcription result:', { text: result.text, confidence: result.confidence });
+      return result;
     } catch (error) {
       console.error('Speech transcription error:', error);
       throw new Error('Failed to transcribe speech');
