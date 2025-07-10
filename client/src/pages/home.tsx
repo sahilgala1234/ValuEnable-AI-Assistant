@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import VoiceAssistant from "@/components/VoiceAssistant";
-import { Shield } from "lucide-react";
+import { Shield, Database } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 export default function Home() {
   useEffect(() => {
@@ -23,6 +25,12 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <Link href="/training">
+                <Button variant="outline" size="sm">
+                  <Database className="w-4 h-4 mr-2" />
+                  Training Data
+                </Button>
+              </Link>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
                 <span>System Active</span>
