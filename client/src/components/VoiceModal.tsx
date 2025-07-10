@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, Volume2 } from "lucide-react";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
@@ -16,6 +16,7 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'stopped'>('idle');
   const [transcript, setTranscript] = useState('');
   const [confidence, setConfidence] = useState(0);
+  const processedAudioRef = useRef<Blob | null>(null);
   
   const {
     isSupported: isVoiceSupported,
@@ -32,15 +33,19 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
     supported: speechSupported
   } = useSpeechSynthesis();
 
+  // Reset state when modal opens
   useEffect(() => {
     if (isOpen && recordingState === 'idle') {
       setTranscript('');
       setConfidence(0);
+      processedAudioRef.current = null;
     }
   }, [isOpen, recordingState]);
 
+  // Handle audio blob completion
   useEffect(() => {
-    if (audioBlob && recordingState === 'stopped') {
+    if (audioBlob && recordingState === 'stopped' && audioBlob !== processedAudioRef.current) {
+      processedAudioRef.current = audioBlob;
       onComplete(audioBlob);
     }
   }, [audioBlob, recordingState, onComplete]);
@@ -77,6 +82,7 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
       <Dialog open={isOpen} onOpenChange={onCancel}>
         <DialogContent className="max-w-md">
           <DialogTitle className="sr-only">Voice Not Supported</DialogTitle>
+          <DialogDescription className="sr-only">Browser does not support voice recording functionality</DialogDescription>
           <div className="text-center py-8">
             <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mic className="text-red-500 text-2xl" />
@@ -96,6 +102,7 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
     <Dialog open={isOpen} onOpenChange={onCancel}>
       <DialogContent className="max-w-md">
         <DialogTitle className="sr-only">Voice Input</DialogTitle>
+        <DialogDescription className="sr-only">Record voice input for insurance questions</DialogDescription>
         <div className="text-center py-8">
           <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
             <Mic className={`text-white text-2xl ${isRecording ? 'animate-pulse' : ''}`} />
