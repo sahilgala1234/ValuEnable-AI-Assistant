@@ -21,7 +21,7 @@ export default function VoiceAssistant() {
     },
     onSuccess: (data) => {
       setSessionId(data.sessionId);
-      queryClient.setQueryData(["conversations", data.sessionId], data);
+      queryClient.setQueryData(["/api/conversations", data.sessionId], data);
     },
     onError: () => {
       toast({
@@ -34,7 +34,7 @@ export default function VoiceAssistant() {
 
   // Get conversation data
   const { data: conversation, isLoading } = useQuery({
-    queryKey: ["conversations", sessionId],
+    queryKey: ["/api/conversations", sessionId],
     enabled: !!sessionId,
     refetchInterval: 2000, // Refetch every 2 seconds for real-time updates
     staleTime: 0, // Consider data stale immediately
@@ -42,7 +42,7 @@ export default function VoiceAssistant() {
 
   // Get analytics
   const { data: analytics } = useQuery({
-    queryKey: ["analytics", sessionId],
+    queryKey: ["/api/conversations", sessionId, "analytics"],
     enabled: !!sessionId,
     refetchInterval: 10000, // Refetch every 10 seconds
   });
@@ -55,8 +55,8 @@ export default function VoiceAssistant() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["conversations", sessionId] });
-      queryClient.invalidateQueries({ queryKey: ["analytics", sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations", sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations", sessionId, "analytics"] });
     },
     onError: () => {
       toast({
@@ -88,8 +88,8 @@ export default function VoiceAssistant() {
     },
     onSuccess: (data) => {
       console.log('Voice message processed successfully:', data);
-      queryClient.invalidateQueries({ queryKey: ["conversations", sessionId] });
-      queryClient.invalidateQueries({ queryKey: ["analytics", sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations", sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations", sessionId, "analytics"] });
       setIsVoiceModalOpen(false);
       toast({
         title: "Voice Message Processed",
@@ -115,8 +115,8 @@ export default function VoiceAssistant() {
     },
     onSuccess: (data) => {
       setSessionId(data.sessionId);
-      queryClient.setQueryData(["conversations", data.sessionId], data);
-      queryClient.removeQueries({ queryKey: ["analytics"] });
+      queryClient.setQueryData(["/api/conversations", data.sessionId], data);
+      queryClient.removeQueries({ queryKey: ["/api/conversations"] });
       toast({
         title: "Success",
         description: "Conversation cleared",
