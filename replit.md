@@ -1,0 +1,117 @@
+# ValuEnable AI Assistant - Insurance Voice Helper
+
+## Overview
+
+This is a full-stack web application for an AI-powered insurance voice assistant. The application allows users to interact with an AI agent through both text and voice input to get help with insurance-related queries, policy information, claims processing, and general insurance guidance.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React with TypeScript
+- **Build Tool**: Vite for fast development and optimized builds
+- **Routing**: Wouter for lightweight client-side routing
+- **State Management**: TanStack React Query for server state management
+- **Styling**: Tailwind CSS with CSS variables for theming
+- **UI Components**: Radix UI primitives with shadcn/ui design system
+- **Design System**: "New York" style with neutral base colors and customizable themes
+
+### Backend Architecture
+- **Runtime**: Node.js with Express.js framework
+- **Language**: TypeScript with ES modules
+- **Database**: PostgreSQL with Drizzle ORM
+- **Database Provider**: Neon Database (serverless PostgreSQL)
+- **API Design**: RESTful API with JSON responses
+- **Error Handling**: Centralized error middleware with structured responses
+
+### Data Storage Solutions
+- **Database**: PostgreSQL for persistent data storage
+- **ORM**: Drizzle ORM for type-safe database operations
+- **Schema**: Defined in shared TypeScript files for consistency
+- **Session Management**: PostgreSQL-based session storage with connect-pg-simple
+- **In-Memory Fallback**: Memory-based storage implementation for development
+
+## Key Components
+
+### Database Schema
+- **Users**: Basic user authentication and identification
+- **Conversations**: Session-based conversation tracking with metadata
+- **Messages**: Individual messages with type classification (user/ai/system)
+- **Knowledge Base**: Structured insurance information for AI responses
+
+### AI Integration
+- **OpenAI Service**: GPT-4o integration for natural language processing
+- **Speech Services**: Audio transcription and text-to-speech capabilities
+- **Knowledge Base Search**: Semantic search through insurance knowledge base
+- **Context Management**: Conversation history and context preservation
+
+### Voice Features
+- **Speech Recognition**: Browser-based speech-to-text using Web Speech API
+- **Audio Recording**: MediaRecorder API for audio capture
+- **Speech Synthesis**: Browser-based text-to-speech for AI responses
+- **Voice Controls**: Comprehensive voice interaction interface
+
+### UI Components
+- **Conversation Area**: Real-time message display with typing indicators
+- **Voice Modal**: Dedicated interface for voice interactions
+- **Sidebar**: Quick actions and analytics dashboard
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+
+## Data Flow
+
+1. **User Interaction**: User initiates conversation through text or voice input
+2. **Session Management**: System creates or retrieves conversation session
+3. **Message Processing**: User input is processed and stored in database
+4. **AI Processing**: 
+   - Knowledge base search for relevant information
+   - Context building from conversation history
+   - OpenAI API call for response generation
+5. **Response Delivery**: AI response is stored and delivered to user
+6. **Voice Synthesis**: Text responses converted to speech when requested
+7. **Analytics**: Conversation metrics and performance data collected
+
+## External Dependencies
+
+### Core Technologies
+- **OpenAI API**: For natural language processing and audio transcription
+- **Neon Database**: Serverless PostgreSQL hosting
+- **Radix UI**: Accessible UI component primitives
+- **TanStack React Query**: Server state management and caching
+
+### Voice Processing
+- **Web Speech API**: Browser-native speech recognition
+- **MediaRecorder API**: Audio recording capabilities
+- **OpenAI Whisper**: Audio transcription service
+
+### Development Tools
+- **Vite**: Development server and build tool
+- **Drizzle Kit**: Database schema management and migrations
+- **ESBuild**: Server-side bundling for production
+
+## Deployment Strategy
+
+### Development Environment
+- **Local Development**: Vite dev server with hot module replacement
+- **Database**: Development database with memory fallback
+- **Environment Variables**: OpenAI API key and database URL configuration
+
+### Production Build
+- **Frontend**: Vite build with optimized assets
+- **Backend**: ESBuild bundling for Node.js deployment
+- **Database**: Automated migrations with Drizzle Kit
+- **Environment**: Production environment variable management
+
+### Architecture Decisions
+
+1. **Full-Stack TypeScript**: Chosen for type safety and shared type definitions between frontend and backend
+2. **Drizzle ORM**: Selected for type-safe database operations and better TypeScript integration compared to alternatives
+3. **Memory Storage Fallback**: Implemented for development flexibility and testing without database dependency
+4. **Conversation Sessions**: Session-based architecture allows for stateful conversations without requiring user authentication
+5. **Knowledge Base Integration**: Structured insurance knowledge base provides consistent and accurate responses
+6. **Voice-First Design**: UI optimized for voice interactions while maintaining full text-based functionality
+7. **Serverless Database**: Neon Database chosen for scalability and maintenance-free PostgreSQL hosting
+
+The application follows a clean architecture pattern with clear separation between presentation, business logic, and data layers, making it maintainable and extensible for future insurance domain features.

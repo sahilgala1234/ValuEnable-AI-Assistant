@@ -1,0 +1,247 @@
+import { 
+  users, 
+  conversations, 
+  messages, 
+  knowledgeBaseEntries,
+  type User, 
+  type InsertUser,
+  type Conversation,
+  type InsertConversation,
+  type Message,
+  type InsertMessage,
+  type KnowledgeBase,
+  type InsertKnowledgeBase,
+  type ConversationWithMessages
+} from "@shared/schema";
+
+export interface IStorage {
+  // User methods
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  
+  // Conversation methods
+  getConversation(id: number): Promise<Conversation | undefined>;
+  getConversationBySessionId(sessionId: string): Promise<Conversation | undefined>;
+  getConversationWithMessages(sessionId: string): Promise<ConversationWithMessages | undefined>;
+  createConversation(conversation: InsertConversation): Promise<Conversation>;
+  updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation | undefined>;
+  
+  // Message methods
+  getMessage(id: number): Promise<Message | undefined>;
+  getMessagesByConversation(conversationId: number): Promise<Message[]>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  
+  // Knowledge base methods
+  getKnowledgeBaseEntries(): Promise<KnowledgeBase[]>;
+  getKnowledgeBaseByCategory(category: string): Promise<KnowledgeBase[]>;
+  searchKnowledgeBase(query: string): Promise<KnowledgeBase[]>;
+  createKnowledgeBaseEntry(entry: InsertKnowledgeBase): Promise<KnowledgeBase>;
+}
+
+export class MemStorage implements IStorage {
+  private users: Map<number, User>;
+  private conversations: Map<number, Conversation>;
+  private messages: Map<number, Message>;
+  private knowledgeBase: Map<number, KnowledgeBase>;
+  private currentUserId: number;
+  private currentConversationId: number;
+  private currentMessageId: number;
+  private currentKnowledgeBaseId: number;
+
+  constructor() {
+    this.users = new Map();
+    this.conversations = new Map();
+    this.messages = new Map();
+    this.knowledgeBase = new Map();
+    this.currentUserId = 1;
+    this.currentConversationId = 1;
+    this.currentMessageId = 1;
+    this.currentKnowledgeBaseId = 1;
+    
+    // Initialize with sample knowledge base entries
+    this.initializeKnowledgeBase();
+  }
+
+  private initializeKnowledgeBase() {
+    const entries = [
+      {
+        category: "Life Insurance",
+        question: "What is life insurance?",
+        answer: "Life insurance is a contract between you and an insurance company where you pay premiums in exchange for a death benefit paid to your beneficiaries when you pass away.",
+        keywords: ["life insurance", "death benefit", "premiums", "beneficiaries"],
+        priority: 1,
+        isActive: true
+      },
+      {
+        category: "Life Insurance",
+        question: "How are life insurance premiums calculated?",
+        answer: "Life insurance premiums are calculated based on several factors: age, health condition, lifestyle habits, coverage amount, policy type, and gender. Younger and healthier individuals typically pay lower premiums.",
+        keywords: ["premiums", "calculation", "age", "health", "lifestyle", "coverage"],
+        priority: 1,
+        isActive: true
+      },
+      {
+        category: "Claims",
+        question: "How do I file a life insurance claim?",
+        answer: "To file a life insurance claim: 1) Contact the insurance company, 2) Provide the death certificate, 3) Complete claim forms, 4) Submit required documentation, 5) Wait for processing (usually 30-60 days).",
+        keywords: ["claims", "file claim", "death certificate", "documentation"],
+        priority: 1,
+        isActive: true
+      },
+      {
+        category: "Policy Types",
+        question: "What are the different types of life insurance?",
+        answer: "Main types include: Term Life (temporary coverage), Whole Life (permanent with cash value), Universal Life (flexible premiums), and Variable Life (investment component).",
+        keywords: ["policy types", "term life", "whole life", "universal life", "variable life"],
+        priority: 1,
+        isActive: true
+      },
+      {
+        category: "Coverage",
+        question: "How much life insurance coverage do I need?",
+        answer: "A general rule is 10-12 times your annual income. Consider your debts, family expenses, children's education costs, and your spouse's income when determining coverage amount.",
+        keywords: ["coverage amount", "income", "debts", "family expenses", "education"],
+        priority: 1,
+        isActive: true
+      }
+    ];
+
+    entries.forEach(entry => {
+      const id = this.currentKnowledgeBaseId++;
+      this.knowledgeBase.set(id, { ...entry, id });
+    });
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.username === username,
+    );
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.currentUserId++;
+    const user: User = { ...insertUser, id };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async getConversation(id: number): Promise<Conversation | undefined> {
+    return this.conversations.get(id);
+  }
+
+  async getConversationBySessionId(sessionId: string): Promise<Conversation | undefined> {
+    return Array.from(this.conversations.values()).find(
+      (conversation) => conversation.sessionId === sessionId,
+    );
+  }
+
+  async getConversationWithMessages(sessionId: string): Promise<ConversationWithMessages | undefined> {
+    const conversation = await this.getConversationBySessionId(sessionId);
+    if (!conversation) return undefined;
+    
+    const messages = await this.getMessagesByConversation(conversation.id);
+    return { ...conversation, messages };
+  }
+
+  async createConversation(insertConversation: InsertConversation): Promise<Conversation> {
+    const id = this.currentConversationId++;
+    const conversation: Conversation = { 
+      ...insertConversation, 
+      id,
+      startTime: new Date(),
+      endTime: null,
+      messageCount: 0,
+      duration: 0,
+      status: "active",
+      userId: insertConversation.userId || null
+    };
+    this.conversations.set(id, conversation);
+    return conversation;
+  }
+
+  async updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation | undefined> {
+    const conversation = this.conversations.get(id);
+    if (!conversation) return undefined;
+    
+    const updatedConversation = { ...conversation, ...updates };
+    this.conversations.set(id, updatedConversation);
+    return updatedConversation;
+  }
+
+  async getMessage(id: number): Promise<Message | undefined> {
+    return this.messages.get(id);
+  }
+
+  async getMessagesByConversation(conversationId: number): Promise<Message[]> {
+    return Array.from(this.messages.values())
+      .filter(message => message.conversationId === conversationId)
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const id = this.currentMessageId++;
+    const message: Message = { 
+      ...insertMessage, 
+      id,
+      timestamp: new Date(),
+      voiceData: insertMessage.voiceData || null,
+      responseTime: insertMessage.responseTime || null,
+      metadata: insertMessage.metadata || null
+    };
+    this.messages.set(id, message);
+    
+    // Update conversation message count
+    const conversation = this.conversations.get(insertMessage.conversationId);
+    if (conversation) {
+      conversation.messageCount = (conversation.messageCount || 0) + 1;
+      this.conversations.set(insertMessage.conversationId, conversation);
+    }
+    
+    return message;
+  }
+
+  async getKnowledgeBaseEntries(): Promise<KnowledgeBase[]> {
+    return Array.from(this.knowledgeBase.values()).filter(entry => entry.isActive);
+  }
+
+  async getKnowledgeBaseByCategory(category: string): Promise<KnowledgeBase[]> {
+    return Array.from(this.knowledgeBase.values()).filter(
+      entry => entry.category === category && entry.isActive
+    );
+  }
+
+  async searchKnowledgeBase(query: string): Promise<KnowledgeBase[]> {
+    const searchTerm = query.toLowerCase();
+    return Array.from(this.knowledgeBase.values()).filter(entry => {
+      if (!entry.isActive) return false;
+      
+      const matchesQuestion = entry.question.toLowerCase().includes(searchTerm);
+      const matchesAnswer = entry.answer.toLowerCase().includes(searchTerm);
+      const matchesKeywords = entry.keywords?.some(keyword => 
+        keyword.toLowerCase().includes(searchTerm)
+      );
+      
+      return matchesQuestion || matchesAnswer || matchesKeywords;
+    }).sort((a, b) => (b.priority || 0) - (a.priority || 0));
+  }
+
+  async createKnowledgeBaseEntry(entry: InsertKnowledgeBase): Promise<KnowledgeBase> {
+    const id = this.currentKnowledgeBaseId++;
+    const knowledgeEntry: KnowledgeBase = { 
+      ...entry, 
+      id,
+      priority: entry.priority || 1,
+      isActive: entry.isActive !== false,
+      keywords: entry.keywords || null
+    };
+    this.knowledgeBase.set(id, knowledgeEntry);
+    return knowledgeEntry;
+  }
+}
+
+export const storage = new MemStorage();
