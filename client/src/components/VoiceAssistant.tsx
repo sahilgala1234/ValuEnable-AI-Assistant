@@ -18,7 +18,7 @@ export default function VoiceAssistant() {
   // Initialize conversation
   const { mutate: createConversation } = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/conversations");
+      const res = await apiRequest("/api/conversations", { method: "POST" });
       return res.json();
     },
     onSuccess: (data) => {
@@ -53,7 +53,10 @@ export default function VoiceAssistant() {
   const { mutate: sendMessage, isPending: isSendingMessage } = useMutation({
     mutationFn: async (content: string) => {
       if (!sessionId) throw new Error("No active session");
-      const res = await apiRequest("POST", `/api/conversations/${sessionId}/messages`, { content });
+      const res = await apiRequest(`/api/conversations/${sessionId}/messages`, { 
+        method: "POST", 
+        body: { content } 
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -113,7 +116,7 @@ export default function VoiceAssistant() {
   // Clear conversation
   const { mutate: clearConversation } = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/conversations");
+      const res = await apiRequest("/api/conversations", { method: "POST" });
       return res.json();
     },
     onSuccess: (data) => {
