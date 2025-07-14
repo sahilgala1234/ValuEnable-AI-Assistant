@@ -22,11 +22,23 @@ export function useVoiceRecognition() {
     }
 
     try {
+      // Clear all previous state before starting new recording
       setError(null);
       setAudioBlob(null);
       setTranscript('');
       setConfidence(0);
       audioChunksRef.current = [];
+      
+      // Stop any existing recording first
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current = null;
+      }
+      
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
 
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ 

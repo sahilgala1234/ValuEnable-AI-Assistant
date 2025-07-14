@@ -24,7 +24,8 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
     startRecording,
     stopRecording,
     audioBlob,
-    error: voiceError
+    error: voiceError,
+    resetRecording
   } = useVoiceRecognition();
 
   const {
@@ -40,8 +41,9 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
       setConfidence(0);
       processedAudioRef.current = null;
       setRecordingState('idle');
+      resetRecording(); // Reset audio recording state
     }
-  }, [isOpen]);
+  }, [isOpen, resetRecording]);
 
   // Prevent multiple modals by ensuring only one can be open at a time
   useEffect(() => {
@@ -61,6 +63,8 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
 
   const handleStartRecording = async () => {
     try {
+      // Clear any previous audio blob before starting new recording
+      resetRecording();
       setRecordingState('recording');
       await startRecording();
     } catch (error) {
@@ -79,6 +83,7 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
       stopRecording();
     }
     setRecordingState('idle');
+    resetRecording(); // Reset audio recording state
     onCancel();
   };
 
