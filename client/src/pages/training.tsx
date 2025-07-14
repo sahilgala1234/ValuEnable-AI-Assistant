@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileAudio, Clock, CheckCircle, XCircle, ArrowLeft, Shield } from "lucide-react";
+import { Upload, FileAudio, Clock, CheckCircle, XCircle, ArrowLeft, Shield, Trash2, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface TrainingData {
   id: number;
@@ -76,35 +77,53 @@ export default function Training() {
     },
   });
 
-  // Reprocess mutation
-  const reprocessMutation = useMutation({
+  // Delete mutation
+  const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/training/${id}/reprocess`, {
-        method: "POST",
+      return await apiRequest(`/api/training/${id}`, {
+        method: "DELETE",
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Reprocessing failed");
-      }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Reprocessing started",
-        description: "The training data is being reprocessed with improved algorithms.",
+        title: "Training data deleted",
+        description: "The training file has been removed successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/training"] });
     },
     onError: (error: Error) => {
       toast({
-        title: "Reprocessing failed",
+        title: "Delete failed",
         description: error.message,
         variant: "destructive",
       });
     },
   });
+
+  // Reprocess mutation
+  const reprocessMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/training/${id}/reprocess`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reprocessing started",
+        description: "The training file is being reprocessed with improved algorithms.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/training"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Reprocess failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -254,10 +273,42 @@ export default function Training() {
                             {reprocessMutation.isPending ? (
                               <Clock className="w-3 h-3 mr-1 animate-spin" />
                             ) : (
-                              <>🔄 Reprocess</>
+                              <>
+                                <RotateCcw className="w-3 h-3 mr-1" />
+                                Reprocess
+                              </>
                             )}
                           </Button>
                         )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Training Data</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{item.filename}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteMutation.mutate(item.id)}
+                                className="bg-red-500 hover:bg-red-600"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                     

@@ -49,6 +49,7 @@ export interface IStorage {
   getTrainingDataById(id: number): Promise<TrainingData | undefined>;
   createTrainingDataEntry(entry: InsertTrainingData): Promise<TrainingData>;
   updateTrainingDataEntry(id: number, updates: Partial<TrainingData>): Promise<TrainingData | undefined>;
+  deleteTrainingDataEntry(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -220,6 +221,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(trainingData.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  async deleteTrainingDataEntry(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(trainingData)
+        .where(eq(trainingData.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting training data:', error);
+      return false;
+    }
   }
 }
 
@@ -468,6 +481,10 @@ export class MemStorage implements IStorage {
     };
     this.trainingData.set(id, updated);
     return updated;
+  }
+
+  async deleteTrainingDataEntry(id: number): Promise<boolean> {
+    return this.trainingData.delete(id);
   }
 }
 

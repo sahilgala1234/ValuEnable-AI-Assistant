@@ -396,6 +396,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete training data entry
+  app.delete("/api/training/:id(\\d+)", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const trainingData = await storage.getTrainingDataById(id);
+      
+      if (!trainingData) {
+        return res.status(404).json({ error: "Training data not found" });
+      }
+
+      const deleted = await storage.deleteTrainingDataEntry(id);
+      
+      if (deleted) {
+        res.json({ success: true, message: "Training data deleted successfully" });
+      } else {
+        res.status(500).json({ error: "Failed to delete training data" });
+      }
+    } catch (error) {
+      console.error("Error deleting training data:", error);
+      res.status(500).json({ error: "Failed to delete training data" });
+    }
+  });
+
   // Get conversation analytics
   app.get("/api/conversations/:sessionId/analytics", async (req, res) => {
     try {
