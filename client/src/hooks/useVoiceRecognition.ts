@@ -110,8 +110,28 @@ export function useVoiceRecognition() {
     
     if (recognitionRef.current) {
       recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
   }, [isRecording]);
+
+  // Reset function to clear all state
+  const resetRecording = useCallback(() => {
+    setIsRecording(false);
+    setAudioBlob(null);
+    setError(null);
+    setTranscript('');
+    setConfidence(0);
+    audioChunksRef.current = [];
+    
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current = null;
+    }
+    
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+  }, []);
 
   return {
     isSupported,
@@ -121,7 +141,8 @@ export function useVoiceRecognition() {
     transcript,
     confidence,
     startRecording,
-    stopRecording
+    stopRecording,
+    resetRecording
   };
 }
 

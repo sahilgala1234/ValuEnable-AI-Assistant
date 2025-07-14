@@ -35,12 +35,13 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
 
   // Reset state when modal opens
   useEffect(() => {
-    if (isOpen && recordingState === 'idle') {
+    if (isOpen) {
       setTranscript('');
       setConfidence(0);
       processedAudioRef.current = null;
+      setRecordingState('idle');
     }
-  }, [isOpen, recordingState]);
+  }, [isOpen]);
 
   // Prevent multiple modals by ensuring only one can be open at a time
   useEffect(() => {

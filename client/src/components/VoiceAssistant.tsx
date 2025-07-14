@@ -160,18 +160,18 @@ export default function VoiceAssistant() {
     }
     
     // Prevent opening multiple modals
-    if (isVoiceModalOpen || isSendingVoice || voiceButtonDisabled) {
+    if (isVoiceModalOpen || isSendingVoice) {
       return;
     }
     
-    // Temporarily disable the button to prevent double-clicks
+    // Temporarily disable the button to prevent double-clicks only for a short time
     setVoiceButtonDisabled(true);
     setIsVoiceModalOpen(true);
     
-    // Re-enable the button after a delay
+    // Re-enable the button after a short delay
     voiceClickTimeoutRef.current = setTimeout(() => {
       setVoiceButtonDisabled(false);
-    }, 1000);
+    }, 300); // Reduced from 1000ms to 300ms
   };
 
   const handleVoiceComplete = (audioBlob: Blob) => {
