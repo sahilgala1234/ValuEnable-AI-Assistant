@@ -27,6 +27,9 @@ Preferred communication style: Simple, everyday language.
 - ✅ Added reprocess functionality for improved transcription quality
 - ✅ Updated knowledge base with conversation flow guidelines
 - ✅ Veena now follows professional insurance agent conversation structure
+- ✅ Added delete functionality for training data with confirmation dialog
+- ✅ Created complete CRUD operations for training data management
+- ✅ Fixed API request handling for proper HTTP method support
 
 ## System Architecture
 
@@ -101,6 +104,8 @@ Preferred communication style: Simple, everyday language.
 - **POST /api/training/upload**: Upload MP4 call recordings for training
 - **GET /api/training**: List all training data entries
 - **GET /api/training/:id**: Get specific training data entry details
+- **POST /api/training/:id/reprocess**: Reprocess training data with improved algorithms
+- **DELETE /api/training/:id**: Delete training data entry with confirmation
 
 ### Voice & Conversation Management
 - **POST /api/conversations**: Start new conversation session
