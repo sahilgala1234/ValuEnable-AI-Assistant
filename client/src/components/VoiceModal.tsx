@@ -16,6 +16,7 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'stopped'>('idle');
   const [transcript, setTranscript] = useState('');
   const [confidence, setConfidence] = useState(0);
+  const [recordingId, setRecordingId] = useState<string | null>(null);
   const processedAudioRef = useRef<Blob | null>(null);
   
   const {
@@ -37,11 +38,14 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
+      const newRecordingId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      setRecordingId(newRecordingId);
       setTranscript('');
       setConfidence(0);
       processedAudioRef.current = null;
       setRecordingState('idle');
       resetRecording(); // Reset audio recording state
+      console.log('Starting new recording session:', newRecordingId);
     }
   }, [isOpen, resetRecording]);
 
@@ -55,17 +59,24 @@ export default function VoiceModal({ isOpen, onComplete, onCancel, isProcessing 
 
   // Handle audio blob completion
   useEffect(() => {
-    if (audioBlob && recordingState === 'stopped' && audioBlob !== processedAudioRef.current) {
+    if (audioBlob && recordingState === 'stopped' && audioBlob !== processedAudioRef.current && recordingId) {
       processedAudioRef.current = audioBlob;
+      console.log('Processing new audio blob for recording:', recordingId, 'size:', audioBlob.size, 'bytes');
       onComplete(audioBlob);
+      // Reset recording state after processing
+      setRecordingState('idle');
     }
-  }, [audioBlob, recordingState, onComplete]);
+  }, [audioBlob, recordingState, onComplete, recordingId]);
 
   const handleStartRecording = async () => {
     try {
       // Clear any previous audio blob before starting new recording
       resetRecording();
+      processedAudioRef.current = null;
+      const newRecordingId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      setRecordingId(newRecordingId);
       setRecordingState('recording');
+      console.log('Starting recording:', newRecordingId);
       await startRecording();
     } catch (error) {
       console.error('Failed to start recording:', error);

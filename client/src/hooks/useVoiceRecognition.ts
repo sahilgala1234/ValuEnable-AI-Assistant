@@ -63,6 +63,7 @@ export function useVoiceRecognition() {
 
       mediaRecorderRef.current.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        console.log('Created new audio blob:', blob.size, 'bytes');
         setAudioBlob(blob);
         
         // Stop all tracks

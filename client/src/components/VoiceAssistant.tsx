@@ -95,8 +95,6 @@ export default function VoiceAssistant() {
       console.log('Voice message processed successfully:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/conversations", sessionId] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations", sessionId, "analytics"] });
-      setIsVoiceModalOpen(false);
-      setVoiceButtonDisabled(false);
       toast({
         title: "Voice Message Processed",
         description: "Your voice message has been processed successfully",
@@ -175,7 +173,10 @@ export default function VoiceAssistant() {
   };
 
   const handleVoiceComplete = (audioBlob: Blob) => {
+    console.log('Voice recording completed, blob size:', audioBlob.size);
     sendVoiceMessage(audioBlob);
+    setIsVoiceModalOpen(false);
+    setVoiceButtonDisabled(false);
   };
 
   const handleVoiceCancel = () => {
