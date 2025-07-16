@@ -1,6 +1,7 @@
 import { openAIService } from './openai';
 import { storage } from '../storage';
 import type { TrainingData } from '@shared/schema';
+import { TrainingPrompts, PromptManager } from '../prompts/index';
 
 export interface TrainingAnalysis {
   customerQuestions: string[];
@@ -59,21 +60,7 @@ Analyze this insurance call recording transcription and extract structured train
 TRANSCRIPTION:
 ${entry.transcription}
 
-Please provide a JSON response with the following structure:
-{
-  "customerQuestions": ["list of customer questions/concerns"],
-  "agentResponses": ["list of agent responses and approaches"],
-  "conversationFlow": ["ordered list of conversation steps"],
-  "keyInsights": ["important insights about customer needs and agent techniques"],
-  "suggestedImprovements": ["suggestions for better handling similar calls"]
-}
-
-Focus on:
-1. Customer pain points and questions
-2. Effective agent responses and techniques
-3. Conversation flow and structure
-4. Areas for improvement
-5. Specific insurance terminology and processes discussed
+${TrainingPrompts.TRAINING_ANALYSIS_PROMPT}
 `;
 
     try {
@@ -170,26 +157,15 @@ Focus on:
     const customerQuestions = usableData.flatMap(d => d.analysis.customerQuestions);
     const agentResponses = usableData.flatMap(d => d.analysis.agentResponses);
     const keyInsights = usableData.flatMap(d => d.analysis.keyInsights);
+    const averageQualityScore = usableData.reduce((sum, d) => sum + d.qualityScore, 0) / usableData.length;
     
-    return `
-TRAINING DATA INSIGHTS FOR VEENA AI ASSISTANT:
-
-COMMON CUSTOMER QUESTIONS:
-${customerQuestions.slice(0, 10).map((q, i) => `${i + 1}. ${q}`).join('\n')}
-
-EFFECTIVE AGENT RESPONSES:
-${agentResponses.slice(0, 10).map((r, i) => `${i + 1}. ${r}`).join('\n')}
-
-KEY INSIGHTS:
-${keyInsights.slice(0, 10).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
-
-TRAINING SUMMARY:
-- Analyzed ${usableData.length} training calls
-- Average quality score: ${Math.round(usableData.reduce((sum, d) => sum + d.qualityScore, 0) / usableData.length)}%
-- Generated training insights for improved customer interactions
-
-Use these insights to provide more natural, empathetic, and effective responses to customers.
-`;
+    return PromptManager.formatTrainingPrompt({
+      customerQuestions,
+      agentResponses,
+      keyInsights,
+      usableDataCount: usableData.length,
+      averageQualityScore
+    });
   }
 
   async updateAIModelWithTrainingData(): Promise<void> {

@@ -44,6 +44,11 @@ Preferred communication style: Simple, everyday language.
 - ✅ **Simplified knowledge base search** - uses in-memory filtering to avoid SQL array complications
 - ✅ **Confirmed accurate policy data access** - Premium paid: ₹4,00,000, Sum Assured: ₹10,00,000
 - ✅ **Voice input and output both working** with proper policy information retrieval
+- ✅ **Centralized prompt management** - created dedicated prompts directory with organized templates
+- ✅ **Refactored system prompts** - moved all prompts to server/prompts/index.ts for better maintainability
+- ✅ **Enhanced conversation flows** - structured branching logic for different customer scenarios
+- ✅ **Multilingual support templates** - organized Hindi/Marathi/Gujarati response templates
+- ✅ **Training prompt optimization** - standardized training data formatting with PromptManager utility
 
 ## System Architecture
 
@@ -86,6 +91,7 @@ Preferred communication style: Simple, everyday language.
 - **Speech Services**: Audio transcription and text-to-speech capabilities
 - **Knowledge Base Search**: Semantic search through insurance knowledge base
 - **Context Management**: Conversation history and context preservation
+- **Prompt Management**: Centralized prompt templates and conversation flows in server/prompts/
 
 ### Voice Features
 - **Speech Recognition**: Browser-based speech-to-text using Web Speech API
