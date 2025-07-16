@@ -54,32 +54,25 @@ export class TrainingService {
     }
 
     const analysisPrompt = `
-Analyze this COMPLETE insurance call recording transcription and extract comprehensive training data for AI model improvement:
+Analyze this insurance call recording transcription and extract structured training data:
 
-FULL TRANSCRIPTION:
+TRANSCRIPTION:
 ${entry.transcription}
 
-Please provide a detailed JSON response with the following structure:
+Please provide a JSON response with the following structure:
 {
-  "customerQuestions": ["extract ALL customer questions, concerns, and objections from the entire call"],
-  "agentResponses": ["extract ALL agent responses, explanations, and techniques used throughout the call"],
-  "conversationFlow": ["step-by-step flow of the entire conversation from greeting to closure"],
-  "keyInsights": ["important insights about customer behavior, needs, and successful agent techniques"],
-  "suggestedImprovements": ["specific suggestions for better handling similar calls based on the complete conversation"]
+  "customerQuestions": ["list of customer questions/concerns"],
+  "agentResponses": ["list of agent responses and approaches"],
+  "conversationFlow": ["ordered list of conversation steps"],
+  "keyInsights": ["important insights about customer needs and agent techniques"],
+  "suggestedImprovements": ["suggestions for better handling similar calls"]
 }
 
-ANALYSIS REQUIREMENTS:
-1. Process the ENTIRE transcription - don't skip any part
-2. Extract ALL customer questions and concerns mentioned throughout the call
-3. Document ALL agent responses and techniques used
-4. Map the complete conversation flow from beginning to end
-5. Identify patterns in customer objections and agent rebuttals
-6. Note language preferences (Hindi/English/Marathi/Gujarati)
-7. Highlight successful persuasion techniques
-8. Identify areas where the conversation could be improved
-9. Focus on policy details, premium discussions, and payment conversations
-
-This analysis will be used to train the AI model to handle similar customer interactions more effectively.
+Focus on:
+1. Customer pain points and questions
+2. Effective agent responses and techniques
+3. Conversation flow and structure
+4. Areas for improvement
 5. Specific insurance terminology and processes discussed
 `;
 
@@ -123,45 +116,18 @@ This analysis will be used to train the AI model to handle similar customer inte
   private calculateQualityScore(analysis: TrainingAnalysis, transcription: string): number {
     let score = 0;
     
-    // Enhanced scoring for complete audio file transcriptions
-    // Base score for transcription length (complete calls should have substantial content)
-    if (transcription.length > 1000) score += 30;
-    else if (transcription.length > 500) score += 25;
-    else if (transcription.length > 200) score += 15;
-    else if (transcription.length > 50) score += 10;
+    // Check transcription quality
+    if (transcription.length > 50) score += 20;
+    if (transcription.length > 200) score += 10;
     
-    // Score for conversation elements (complete calls should have all elements)
-    if (analysis.customerQuestions.length >= 3) score += 25;
-    else if (analysis.customerQuestions.length >= 1) score += 15;
+    // Check analysis completeness
+    if (analysis.customerQuestions.length > 0) score += 20;
+    if (analysis.agentResponses.length > 0) score += 20;
+    if (analysis.conversationFlow.length > 0) score += 15;
+    if (analysis.keyInsights.length > 0) score += 10;
+    if (analysis.suggestedImprovements.length > 0) score += 5;
     
-    if (analysis.agentResponses.length >= 3) score += 25;
-    else if (analysis.agentResponses.length >= 1) score += 15;
-    
-    if (analysis.conversationFlow.length >= 5) score += 15;
-    else if (analysis.conversationFlow.length >= 3) score += 10;
-    
-    if (analysis.keyInsights.length >= 2) score += 10;
-    else if (analysis.keyInsights.length >= 1) score += 5;
-    
-    if (analysis.suggestedImprovements.length >= 2) score += 10;
-    else if (analysis.suggestedImprovements.length >= 1) score += 5;
-    
-    // Bonus for complete conversation indicators
-    const hasGreeting = transcription.toLowerCase().includes('hello') || 
-                       transcription.includes('नमस्ते') || 
-                       transcription.includes('हैलो');
-    if (hasGreeting) score += 5;
-    
-    const hasClosing = transcription.toLowerCase().includes('thank you') || 
-                      transcription.includes('धन्यवाद') || 
-                      transcription.toLowerCase().includes('goodbye');
-    if (hasClosing) score += 5;
-    
-    // Penalize for repetitive or corrupted content
-    if (this.isRepetitiveOrCorrupted(transcription)) score -= 40;
-    
-    // Ensure score is between 0-100
-    return Math.max(0, Math.min(100, score));
+    return Math.min(score, 100);
   }
 
   private isUsableForTraining(analysis: TrainingAnalysis, transcription: string): boolean {

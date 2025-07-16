@@ -183,100 +183,40 @@ Respond as Veena with the specific information available in the knowledge base.`
 
   async transcribeAudio(audioBuffer: Buffer): Promise<{ text: string; confidence: number }> {
     try {
-      console.log('Starting OpenAI Whisper transcription for complete audio file...');
-      console.log(`Processing audio buffer of ${audioBuffer.length} bytes`);
+      console.log('Starting OpenAI Whisper transcription...');
       
       // Create a proper audio file with appropriate MIME type
       const response = await openai.audio.transcriptions.create({
         file: new File([audioBuffer], "audio.wav", { type: "audio/wav" }),
         model: "whisper-1",
-        response_format: "verbose_json", // Get detailed response with timestamps
-        temperature: 0.0, // Maximum accuracy for training data
-        language: "hi", // Hindi as primary language with multilingual support
-        prompt: "This is a complete insurance call recording between a customer and agent. Please transcribe the entire conversation including all customer questions, agent responses, policy details, premium discussions, and conversation flow from beginning to end. Include all Hindi, English, Marathi, and Gujarati content."
+        response_format: "verbose_json",
+        temperature: 0.0, // Use 0 for more deterministic results
+        language: "hi", // Specify Hindi as primary language
+        prompt: "This is a Hindi/English insurance conversation between an agent and a customer discussing policy details, premium payments, and insurance benefits."
       });
 
       console.log('OpenAI Whisper response received:', {
         text: response.text?.substring(0, 100) + '...',
-        duration: response.duration,
-        segments: response.segments ? response.segments.length : 0
+        duration: response.duration
       });
 
-      // For training data, preserve the complete transcription with minimal cleaning
-      const fullTranscription = response.text || '';
-      console.log(`Complete transcription length: ${fullTranscription.length} characters`);
-      console.log(`Audio duration: ${response.duration} seconds`);
+      // Clean up repetitive text that often occurs in poor quality audio
+      let cleanedText = response.text || '';
       
-      // Only remove obviously corrupted repetitions, preserve conversation flow
-      const processedText = this.preserveConversationFlow(fullTranscription);
+      // Remove excessive repetition patterns
+      cleanedText = this.cleanRepetitiveText(cleanedText);
       
-      // Calculate confidence based on text quality and duration
-      const confidence = this.calculateTranscriptionConfidence(processedText, fullTranscription);
+      // Calculate confidence based on text quality
+      const confidence = this.calculateTranscriptionConfidence(cleanedText, response.text || '');
 
       return {
-        text: processedText,
+        text: cleanedText,
         confidence: confidence
       };
     } catch (error) {
       console.error('Audio transcription error:', error);
       throw new Error('Failed to transcribe audio');
     }
-  }
-
-  private preserveConversationFlow(text: string): string {
-    if (!text) return '';
-    
-    // For training data, preserve the complete conversation flow
-    // Only remove obviously corrupted repetitions while maintaining dialogue structure
-    
-    // Split into lines and process each one
-    const lines = text.split('\n');
-    const processedLines: string[] = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      // Skip empty lines but preserve conversation breaks
-      if (line.length === 0) {
-        if (processedLines.length > 0 && processedLines[processedLines.length - 1] !== '') {
-          processedLines.push('');
-        }
-        continue;
-      }
-      
-      // Remove lines that are extremely repetitive (more than 80% repeated characters)
-      if (this.isExtremelyRepetitive(line)) {
-        continue;
-      }
-      
-      // Remove lines that are exact duplicates of the previous line
-      if (processedLines.length > 0 && processedLines[processedLines.length - 1] === line) {
-        continue;
-      }
-      
-      processedLines.push(line);
-    }
-    
-    return processedLines.join('\n').trim();
-  }
-
-  private isExtremelyRepetitive(text: string): boolean {
-    if (text.length < 10) return false;
-    
-    // Count character frequency
-    const charCount = new Map<string, number>();
-    for (const char of text) {
-      charCount.set(char, (charCount.get(char) || 0) + 1);
-    }
-    
-    // Check if any character appears more than 80% of the time
-    for (const count of charCount.values()) {
-      if (count / text.length > 0.8) {
-        return true;
-      }
-    }
-    
-    return false;
   }
 
   private cleanRepetitiveText(text: string): string {

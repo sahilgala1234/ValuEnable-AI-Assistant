@@ -44,12 +44,6 @@ Preferred communication style: Simple, everyday language.
 - ✅ **Simplified knowledge base search** - uses in-memory filtering to avoid SQL array complications
 - ✅ **Confirmed accurate policy data access** - Premium paid: ₹4,00,000, Sum Assured: ₹10,00,000
 - ✅ **Voice input and output both working** with proper policy information retrieval
-- ✅ **Enhanced complete audio file processing** - entire MP4/WAV files now processed with improved transcription
-- ✅ **Optimized OpenAI Whisper transcription** - verbose JSON format with contextual prompts for better accuracy
-- ✅ **Improved training data analysis** - comprehensive extraction of complete conversation insights
-- ✅ **Enhanced quality scoring system** - better evaluation of complete audio transcriptions (5-100% range)
-- ✅ **Conversation flow preservation** - maintains dialogue structure while removing only corrupted repetitions
-- ✅ **Multilingual conversation support** - AI responds in Hindi/English/Marathi/Gujarati based on user language
 
 ## System Architecture
 
