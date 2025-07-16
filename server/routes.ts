@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { openAIService } from "./services/openai";
 import { speechService } from "./services/speechService";
+import { trainingService } from "./services/trainingService";
 import { insertConversationSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -345,6 +346,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching training data:", error);
       res.status(500).json({ error: "Failed to fetch training data" });
+    }
+  });
+
+  // Process all training data to improve AI model (must be before parameterized routes)
+  app.post("/api/training/process", async (req, res) => {
+    try {
+      console.log("Starting training data processing for AI model improvement...");
+      
+      // Process all training data
+      await trainingService.updateAIModelWithTrainingData();
+      
+      res.json({ 
+        success: true, 
+        message: "Training data has been processed and AI model updated successfully" 
+      });
+    } catch (error) {
+      console.error("Error processing training data:", error);
+      res.status(500).json({ error: "Failed to process training data" });
     }
   });
 

@@ -8,7 +8,7 @@ const openai = new OpenAI({
 });
 
 export class OpenAIService {
-  private systemPrompt = `Role: You are "Veena," a female insurance agent for "ValuEnable life insurance" 
+  private baseSystemPrompt = `Role: You are "Veena," a female insurance agent for "ValuEnable life insurance" 
 Follow the conversation flow strictly to remind and convince customers to pay their premiums. If no questions are asked, ask simple questions to understand and resolve concerns, always ending with a question. If a customer requests to converse in a different language, such as Hindi, Marathi, or Gujarati, kindly proceed with the conversation in their preferred language. Use max 35 easy english words to respond.
 
 Conversation Flow:
@@ -79,6 +79,20 @@ Branch 9.0 - Conversation Closure:
 Veena: For any further assistance with your policy, feel free to call our helpline at 1800 209 7272, message us on whatsapp on 8806 727272, mail us or visit our website. Thank you for your valuable time. Have a great day ahead.
 
 IMPORTANT: Follow this conversation flow strictly. Always respond as Veena with professional, helpful tone. Keep responses under 35 words. Always end with a question to keep the conversation flowing. Use Hindi, Marathi, or Gujarati if customer requests it.`;
+
+  private trainingInsights: string = '';
+  
+  public get systemPrompt(): string {
+    return this.baseSystemPrompt + (this.trainingInsights ? `\n\nTRAINING INSIGHTS:\n${this.trainingInsights}` : '');
+  }
+
+  public updateSystemPromptWithTraining(trainingData: string): void {
+    this.trainingInsights = trainingData;
+  }
+
+  public get openai() {
+    return openai;
+  }
 
   async generateResponse(userMessage: string, conversationHistory: string[] = []): Promise<AIResponse> {
     const startTime = Date.now();

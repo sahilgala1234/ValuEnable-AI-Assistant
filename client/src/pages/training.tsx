@@ -123,6 +123,28 @@ export default function Training() {
     },
   });
 
+  // Process training data to improve AI model
+  const processTrainingMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/training/process", {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Training completed",
+        description: "AI model has been updated with training data insights.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Training failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
 
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,7 +266,29 @@ export default function Training() {
         {/* Training Data List */}
         <Card>
           <CardHeader>
-            <CardTitle>Training Data Files</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Training Data Files</CardTitle>
+              {trainingData && trainingData.length > 0 && (
+                <Button
+                  onClick={() => processTrainingMutation.mutate()}
+                  disabled={processTrainingMutation.isPending}
+                  variant="default"
+                  size="sm"
+                >
+                  {processTrainingMutation.isPending ? (
+                    <>
+                      <Clock className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Process Training Data
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
