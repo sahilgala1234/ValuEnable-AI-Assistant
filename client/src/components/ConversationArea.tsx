@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, User, Mic, MicOff, Trash2, Download, Send } from "lucide-react";
+import { Bot, User, Mic, MicOff, Trash2, Download, Send, Volume2, VolumeX } from "lucide-react";
 import type { ConversationWithMessages } from "@shared/schema";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 
 interface ConversationAreaProps {
   conversation?: ConversationWithMessages;
@@ -23,8 +24,12 @@ export default function ConversationArea({
   isSendingVoice
 }: ConversationAreaProps) {
   const [inputValue, setInputValue] = useState("");
+  const [autoSpeak, setAutoSpeak] = useState(true);
+  const [lastSpokenMessageId, setLastSpokenMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const { speak, cancel, speaking, supported: speechSupported } = useSpeechSynthesis();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,6 +38,29 @@ export default function ConversationArea({
   useEffect(() => {
     scrollToBottom();
   }, [conversation?.messages]);
+
+  // Auto-speak new AI messages
+  useEffect(() => {
+    if (!conversation?.messages || !speechSupported || !autoSpeak) return;
+    
+    const lastMessage = conversation.messages[conversation.messages.length - 1];
+    
+    if (lastMessage && 
+        lastMessage.type === 'ai' && 
+        lastMessage.id !== lastSpokenMessageId) {
+      
+      // Small delay to ensure message is fully rendered
+      setTimeout(() => {
+        speak(lastMessage.content, {
+          rate: 0.95,
+          pitch: 1.1,
+          volume: 0.9,
+          lang: 'en-US'
+        });
+        setLastSpokenMessageId(lastMessage.id);
+      }, 500);
+    }
+  }, [conversation?.messages, speechSupported, autoSpeak, lastSpokenMessageId, speak]);
 
   const handleSendMessage = () => {
     if (inputValue.trim() && !isSendingMessage) {
@@ -66,6 +94,27 @@ export default function ConversationArea({
     URL.revokeObjectURL(url);
   };
 
+  const handleSpeakMessage = (content: string) => {
+    if (speaking) {
+      cancel();
+    } else {
+      speak(content, {
+        rate: 0.95,
+        pitch: 1.1,
+        volume: 0.9,
+        lang: 'en-US'
+      });
+    }
+  };
+
+  const toggleAutoSpeak = () => {
+    setAutoSpeak(!autoSpeak);
+    if (!autoSpeak) {
+      // If turning on auto-speak, stop any current speech
+      cancel();
+    }
+  };
+
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       hour: 'numeric',
@@ -94,6 +143,23 @@ export default function ConversationArea({
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            {speechSupported && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleAutoSpeak}
+                className={`px-3 py-1 text-sm ${
+                  autoSpeak ? "bg-accent/10 text-accent" : "text-muted-foreground"
+                }`}
+              >
+                {autoSpeak ? (
+                  <Volume2 className="w-4 h-4 mr-1" />
+                ) : (
+                  <VolumeX className="w-4 h-4 mr-1" />
+                )}
+                Auto-speak {autoSpeak ? "ON" : "OFF"}
+              </Button>
+            )}
             <div className="px-3 py-1 bg-accent/10 text-accent rounded-full text-sm font-medium">
               <Mic className="w-4 h-4 mr-1 inline" />
               Voice Enabled
@@ -126,6 +192,23 @@ export default function ConversationArea({
                 }`}
               >
                 <p className="whitespace-pre-wrap">{message.content}</p>
+                {message.type === "ai" && speechSupported && (
+                  <div className="flex items-center mt-2 pt-2 border-t border-gray-200">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSpeakMessage(message.content)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      {speaking ? (
+                        <VolumeX className="w-3 h-3 mr-1" />
+                      ) : (
+                        <Volume2 className="w-3 h-3 mr-1" />
+                      )}
+                      {speaking ? "Stop" : "Speak"}
+                    </Button>
+                  </div>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {message.type === "ai" ? "AI Assistant" : "You"} • {formatTime(message.timestamp)}

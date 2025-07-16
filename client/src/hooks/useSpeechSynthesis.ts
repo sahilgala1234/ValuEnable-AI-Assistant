@@ -51,13 +51,26 @@ export function useSpeechSynthesis() {
     if (options?.voice) {
       utterance.voice = options.voice;
     } else {
-      // Try to find a natural-sounding English voice
+      // Try to find a natural-sounding female English voice for Veena
+      const femaleVoices = voices.filter(voice => 
+        voice.lang.startsWith('en') && 
+        voice.name.toLowerCase().includes('female') ||
+        voice.name.toLowerCase().includes('samantha') ||
+        voice.name.toLowerCase().includes('zira') ||
+        voice.name.toLowerCase().includes('susan') ||
+        voice.name.toLowerCase().includes('karen') ||
+        voice.name.toLowerCase().includes('hazel')
+      );
+      
+      // Fallback to any good English voice
       const preferredVoices = voices.filter(voice => 
         voice.lang.startsWith('en') && 
         (voice.name.includes('Google') || voice.name.includes('Microsoft') || voice.name.includes('Alex'))
       );
       
-      if (preferredVoices.length > 0) {
+      if (femaleVoices.length > 0) {
+        utterance.voice = femaleVoices[0];
+      } else if (preferredVoices.length > 0) {
         utterance.voice = preferredVoices[0];
       }
     }
