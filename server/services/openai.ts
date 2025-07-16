@@ -86,23 +86,43 @@ IMPORTANT: Follow this conversation flow strictly. Always respond as Veena with 
     try {
       // Search knowledge base for relevant information
       const knowledgeEntries = await storage.searchKnowledgeBase(userMessage);
-      const relevantKnowledge = knowledgeEntries.slice(0, 3).map(entry => 
+      
+      // Also get policy details specifically for premium/payment related queries
+      const policyDetailsEntries = await storage.getKnowledgeBaseByCategory("Policy Details");
+      const paymentEntries = await storage.getKnowledgeBaseByCategory("Payment Options");
+      
+      // Combine all relevant entries
+      const allRelevantEntries = [...knowledgeEntries, ...policyDetailsEntries, ...paymentEntries];
+      const uniqueEntries = allRelevantEntries.filter((entry, index, self) => 
+        index === self.findIndex(e => e.id === entry.id)
+      );
+      
+      const relevantKnowledge = uniqueEntries.slice(0, 5).map(entry => 
         `Q: ${entry.question}\nA: ${entry.answer}`
       ).join('\n\n');
 
       // Build context from conversation history
       const context = conversationHistory.slice(-6).join('\n'); // Last 6 messages for context
 
-      const prompt = `Based on the following knowledge base information:
+      const prompt = `You are Veena, an insurance agent for ValuEnable Life Insurance. Use the following knowledge base information to answer the user's question:
 
+KNOWLEDGE BASE:
 ${relevantKnowledge}
 
-And the conversation context:
+CONVERSATION CONTEXT:
 ${context}
 
-Please respond to the user's question: "${userMessage}"
+USER QUESTION: "${userMessage}"
 
-Provide a helpful, accurate response about insurance topics. If the knowledge base doesn't contain specific information, use your general insurance knowledge but indicate when you're providing general guidance vs. specific policy information.`;
+IMPORTANT INSTRUCTIONS:
+- If the user asks about premium payments, policy details, or insurance information, ALWAYS use the specific information from the knowledge base above
+- For policy queries, refer to the actual policy details: Premium Amount: ₹100,000 yearly, Sum Assured: ₹10,00,000, Premium paid till date: ₹4,00,000
+- If the user asks about premiums paid, tell them the exact amount from the knowledge base
+- Always be helpful and use the available policy information rather than saying you don't have access to it
+- Follow the conversation flow and keep responses under 35 words
+- End with a question to keep the conversation flowing
+
+Respond as Veena with the specific information available in the knowledge base.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",

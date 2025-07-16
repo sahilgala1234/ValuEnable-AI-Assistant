@@ -157,6 +157,53 @@ export class DatabaseStorage implements IStorage {
   async searchKnowledgeBase(query: string): Promise<KnowledgeBase[]> {
     const searchTerms = query.toLowerCase().split(' ');
     
+    // Check for specific premium/payment related queries
+    const premiumKeywords = ['premium', 'payment', 'paid', 'pay', 'amount', 'money', 'policy', 'details'];
+    const isPremiumQuery = searchTerms.some(term => premiumKeywords.includes(term));
+    
+    if (isPremiumQuery) {
+      // For premium queries, prioritize policy details and payment info
+      const policyDetails = await db
+        .select()
+        .from(knowledgeBaseEntries)
+        .where(and(
+          eq(knowledgeBaseEntries.isActive, true),
+          or(
+            eq(knowledgeBaseEntries.category, 'Policy Details'),
+            eq(knowledgeBaseEntries.category, 'Payment Options'),
+            eq(knowledgeBaseEntries.category, 'Premium Revival')
+          )
+        ))
+        .orderBy(desc(knowledgeBaseEntries.priority));
+      
+      // Also search for the specific terms
+      const searchResults = await db
+        .select()
+        .from(knowledgeBaseEntries)
+        .where(and(
+          eq(knowledgeBaseEntries.isActive, true),
+          or(
+            ...searchTerms.map(term => 
+              or(
+                ilike(knowledgeBaseEntries.question, `%${term}%`),
+                ilike(knowledgeBaseEntries.answer, `%${term}%`),
+                ilike(knowledgeBaseEntries.keywords, `%${term}%`)
+              )
+            )
+          )
+        ))
+        .orderBy(desc(knowledgeBaseEntries.priority));
+      
+      // Combine and deduplicate
+      const combined = [...policyDetails, ...searchResults];
+      const unique = combined.filter((entry, index, self) => 
+        index === self.findIndex(e => e.id === entry.id)
+      );
+      
+      return unique;
+    }
+    
+    // Regular search for non-premium queries
     return await db
       .select()
       .from(knowledgeBaseEntries)
@@ -167,7 +214,8 @@ export class DatabaseStorage implements IStorage {
             or(
               ilike(knowledgeBaseEntries.question, `%${term}%`),
               ilike(knowledgeBaseEntries.answer, `%${term}%`),
-              ilike(knowledgeBaseEntries.category, `%${term}%`)
+              ilike(knowledgeBaseEntries.category, `%${term}%`),
+              ilike(knowledgeBaseEntries.keywords, `%${term}%`)
             )
           )
         )
