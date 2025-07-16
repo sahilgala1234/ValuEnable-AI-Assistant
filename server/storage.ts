@@ -17,7 +17,7 @@ import {
   type ConversationWithMessages
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, ilike, or, and } from "drizzle-orm";
+import { eq, desc, ilike, or, and, sql } from "drizzle-orm";
 import { defaultKnowledgeBase } from "./data/knowledgeBase";
 
 export interface IStorage {
@@ -176,51 +176,36 @@ export class DatabaseStorage implements IStorage {
         ))
         .orderBy(desc(knowledgeBaseEntries.priority));
       
-      // Also search for the specific terms
-      const searchResults = await db
-        .select()
-        .from(knowledgeBaseEntries)
-        .where(and(
-          eq(knowledgeBaseEntries.isActive, true),
-          or(
-            ...searchTerms.map(term => 
-              or(
-                ilike(knowledgeBaseEntries.question, `%${term}%`),
-                ilike(knowledgeBaseEntries.answer, `%${term}%`),
-                ilike(knowledgeBaseEntries.keywords, `%${term}%`)
-              )
-            )
-          )
-        ))
-        .orderBy(desc(knowledgeBaseEntries.priority));
-      
-      // Combine and deduplicate
-      const combined = [...policyDetails, ...searchResults];
-      const unique = combined.filter((entry, index, self) => 
-        index === self.findIndex(e => e.id === entry.id)
-      );
-      
-      return unique;
+      if (policyDetails.length > 0) {
+        return policyDetails;
+      }
     }
     
-    // Regular search for non-premium queries
-    return await db
-      .select()
-      .from(knowledgeBaseEntries)
-      .where(and(
-        eq(knowledgeBaseEntries.isActive, true),
-        or(
-          ...searchTerms.map(term => 
-            or(
-              ilike(knowledgeBaseEntries.question, `%${term}%`),
-              ilike(knowledgeBaseEntries.answer, `%${term}%`),
-              ilike(knowledgeBaseEntries.category, `%${term}%`),
-              ilike(knowledgeBaseEntries.keywords, `%${term}%`)
-            )
-          )
-        )
-      ))
-      .orderBy(desc(knowledgeBaseEntries.priority));
+    // Regular search for all queries (simplified to avoid array issues)
+    try {
+      // Get all entries and filter in-memory to avoid SQL array issues
+      const allEntries = await db
+        .select()
+        .from(knowledgeBaseEntries)
+        .where(eq(knowledgeBaseEntries.isActive, true))
+        .orderBy(desc(knowledgeBaseEntries.priority));
+      
+      // Filter by search terms
+      const filtered = allEntries.filter(entry => {
+        const searchableText = (entry.question + ' ' + entry.answer + ' ' + entry.category).toLowerCase();
+        return searchTerms.some(term => searchableText.includes(term));
+      });
+      
+      return filtered.length > 0 ? filtered : allEntries;
+    } catch (error) {
+      // If search fails, return all entries as fallback
+      console.error('Knowledge base search error:', error);
+      return await db
+        .select()
+        .from(knowledgeBaseEntries)
+        .where(eq(knowledgeBaseEntries.isActive, true))
+        .orderBy(desc(knowledgeBaseEntries.priority));
+    }
   }
 
   async createKnowledgeBaseEntry(entry: InsertKnowledgeBase): Promise<KnowledgeBase> {
