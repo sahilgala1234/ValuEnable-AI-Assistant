@@ -17,7 +17,6 @@ Preferred communication style: Simple, everyday language.
 
 **Latest Update (July 10, 2025):**
 - ✅ Fixed voice input double-click issue with enhanced debouncing
-- ✅ Removed Urdu language support (Hindi/English/Marathi/Gujarati only)
 - ✅ Implemented complete MP4/WAV training data upload system
 - ✅ Added multer-based file upload with 100MB limit
 - ✅ Automatic transcription processing with OpenAI Whisper
